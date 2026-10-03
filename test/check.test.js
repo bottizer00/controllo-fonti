@@ -172,3 +172,21 @@ test('stati senza sovrapposizioni tra elementi', () => {
   const r = CF.verifica('x', 'Il 14 marzo 2026 Anna Bellini ha speso 1.300 euro (art. 4) su info@a.it e www.b.it.');
   for (let i = 1; i < r.items.length; i++) assert.ok(r.items[i].inizio >= r.items[i - 1].fine);
 });
+
+test('regressione: gli articoli a inizio frase non sono nomi', () => {
+  const r = CF.verifica("Il test esiste.", "Il test esiste. La prova no. Le cose cambiano. Lo dice Marco.");
+  assert.deepEqual(r.items.map(i => i.testo), ['Marco']);
+});
+
+test('regressione: le parole vuote non rompono il contesto di un numero', () => {
+  const fonte = "Il fatturato del primo trimestre è stato di 2,4 milioni di euro.";
+  const ai = 'Presentato un fatturato di 2,4 milioni di euro nel primo trimestre.';
+  assert.equal(stato(fonte, ai, '2,4 milioni'), 'ok');
+});
+
+test("i nomi con connettore restano interi: Corte di Cassazione", () => {
+  const r = CF.verifica('Decide la Corte di Cassazione.', 'Come stabilito dalla Corte di Cassazione.');
+  assert.equal(r.items.length, 1);
+  assert.equal(r.items[0].testo, 'Corte di Cassazione');
+  assert.equal(r.items[0].stato, 'ok');
+});

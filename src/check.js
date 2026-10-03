@@ -73,16 +73,22 @@
     return lo;
   }
 
+  function parolaDiContenuto(tk) { return !tk.num && tk.t.length >= 3 && !STOP.has(tk.t); }
+
+  // Le radici (prime 4 lettere) delle `prima` parole di contenuto prima del numero e delle `dopo` dopo di esso.
+  // Le parole vuote (articoli, preposizioni...) non contano: "2,4 milioni di euro nel primo trimestre"
+  // viene letto come "primo trimestre", non come "di euro nel".
   function stemsAttorno(tokens, inizio, fine, prima, dopo) {
     var a = primoTokenDopo(tokens, inizio);
     var b = a;
     while (b < tokens.length && tokens[b].i < fine) b++;
-    var set = new Set();
-    for (var k = Math.max(0, a - prima); k < Math.min(tokens.length, b + dopo); k++) {
-      if (k >= a && k < b) continue;
-      var tk = tokens[k];
-      if (tk.num || tk.t.length < 3 || STOP.has(tk.t)) continue;
-      set.add(tk.t.slice(0, 4));
+    var set = new Set(), n = 0, k;
+    for (k = a - 1; k >= 0 && n < prima; k--) {
+      if (parolaDiContenuto(tokens[k])) { set.add(tokens[k].t.slice(0, 4)); n++; }
+    }
+    n = 0;
+    for (k = b; k < tokens.length && n < dopo; k++) {
+      if (parolaDiContenuto(tokens[k])) { set.add(tokens[k].t.slice(0, 4)); n++; }
     }
     return set;
   }
@@ -232,14 +238,15 @@
         parole: [normalizza(m[0])], iniziaFrase: false });
     }
     var spaziAcr = mascheraSpan(testo, out);
-    var reNome = new RegExp('(?<![\\p{L}\\d])\\p{Lu}\\p{Ll}+(?:[\'’]\\p{L}+)?(?:[ \\t]+(?:' + FILTRO_CONNETTORI +
-      '[ \\t]+)?\\p{Lu}\\p{Ll}+(?:[\'’]\\p{L}+)?)*', 'gu');
+    var parolaNome = '\\p{Lu}\\p{Ll}+(?:\\p{Lu}\\p{Ll}+)*(?:[\'’]\\p{L}+)?';       // anche "HomeClean"
+    var reNome = new RegExp('(?<![\\p{L}\\d])' + parolaNome + '(?:[ \\t]+(?:' + FILTRO_CONNETTORI +
+      '[ \\t]+)?' + parolaNome + ')*', 'gu');
     while ((m = reNome.exec(spaziAcr)) !== null) {
       var k = m.index - 1;                                        // ultimo carattere "vero" prima del nome
       while (k >= 0 && /[\s"'«“(\[•*\-–—]/.test(spaziAcr.charAt(k))) k--;
       var iniziaFrase = k < 0 || /[.!?:;\n]/.test(spaziAcr.charAt(k)) || spaziAcr.slice(k + 1, m.index).indexOf('\n') !== -1;
-      var parole = m[0].split(/[ \t]+/).filter(function (p) {
-        return !new RegExp('^' + FILTRO_CONNETTORI + '$', 'i').test(p);
+      var parole = m[0].split(/[ \t]+/).filter(function (p, n) {
+        return n === 0 || !new RegExp('^' + FILTRO_CONNETTORI + '$', 'i').test(p);   // "Banca d'Italia", "Corte di Cassazione"
       }).map(normalizza);
       if (iniziaFrase && parole.length === 1) continue;           // "Il", "Secondo", "Inoltre"...
       if (parole.length === 1 && parole[0].length < 3) continue;
@@ -281,7 +288,7 @@
         var vals = [];
         x.cands.forEach(function (v) { vals.push(v * x.scala); });
         var voce = { valori: vals, grezzi: x.cands, scala: x.scala,
-          ctx: stemsAttorno(tokens, x.inizio, x.fine, 5, 5), testo: x.testo };
+          ctx: stemsAttorno(tokens, x.inizio, x.fine, 2, 2), testo: x.testo };
         idx.numeri.push(voce);
         vals.forEach(function (v) {
           var k = chiaveNum(v);
@@ -303,7 +310,7 @@
 
   function controllaNumero(x, idx, tokensAI) {
     var valoriAI = x.cands.map(function (v) { return v * x.scala; });
-    var ctxAI = stemsAttorno(tokensAI, x.inizio, x.fine, 3, 3);
+    var ctxAI = stemsAttorno(tokensAI, x.inizio, x.fine, 2, 2);
     var trovati = [], visti = new Set();
     valoriAI.forEach(function (a) {
       (idx.perValore.get(chiaveNum(a)) || []).forEach(function (s) {
