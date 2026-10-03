@@ -13,7 +13,7 @@
 :root[data-tema="scuro"] { color-scheme: dark; }
 @media (prefers-color-scheme: dark) {
   :root {
-    --teal: #1aa3a5; --teal-testo: #7fdcdc;
+    --teal: #0d7a7c; --teal-testo: #7fdcdc;
     --sfondo: #0d1520; --carta: #152130; --testo: #e6edf3; --tenue: #9fadbb; --bordo: #2a3a4d; --bordo-forte: #3f5269;
     --ok-bg: #153a28; --ok-tx: #8ee0b1; --ok-br: #2f9e62;
     --warn-bg: #3d3210; --warn-tx: #ffd978; --warn-br: #b98a00;
@@ -241,11 +241,24 @@ h2:focus { outline: none; }
 .nascosto { position: fixed; left: -9999px; top: 0; opacity: 0; }
 [hidden] { display: none !important; }
 
+.percorso { margin: 0 0 6px; font-size: .92rem; }
+.percorso a { color: var(--teal-chiaro); }
+.guida { padding-top: 12px; }
+.guida h2 { border-bottom: 2px solid var(--bordo); padding-bottom: 4px; }
+.tabella { width: 100%; border-collapse: collapse; margin: 10px 0 20px; background: var(--carta); border: 1px solid var(--bordo); }
+.tabella th, .tabella td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--bordo); }
+.tabella th { background: var(--info-bg); color: var(--info-tx); font-size: .88rem; }
+.tabella td:first-child { white-space: nowrap; font-weight: 800; color: var(--teal-testo); }
+@media (max-width: 700px) { .tabella thead { display: none; } .tabella tr { display: block; border-bottom: 2px solid var(--bordo-forte); }
+  .tabella td { display: block; border: 0; padding: 4px 12px; } }
+.domande dt { font-weight: 700; margin-top: 14px; }
+.domande dd { margin: 4px 0 0 0; padding-left: 14px; border-left: 3px solid var(--teal); max-width: 84ch; }
+
 /* ---------- stampa ---------- */
 .area-stampa { display: none; }
 @media print {
   body { background: #fff; color: #000; font-size: 11pt; }
-  .testata, .schede, .salta, .passi, .barra, .colonne, .comandi, .aiuto-file, .limiti, .azioni, .stampa-comandi, .crea,
+  body:not(.pagina-guida) .testata, .schede, .salta, .passi, .barra, .colonne, .comandi, .aiuto-file, .limiti, .azioni, .stampa-comandi, .crea,
   .prompt-testa button, .bandierina, .bottone-link, .esempi, .scheda-voce button, .aiuto { display: none !important; }
   .scheda-voce.attiva { box-shadow: none; }
   body.stampa-risultato main > section { display: none !important; }
@@ -256,6 +269,10 @@ h2:focus { outline: none; }
   .confronto { grid-template-columns: 1fr 1fr; }
   mark { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   body.stampa-scheda main, body.stampa-scheda .testata { display: none !important; }
+  .pagina-guida .testata { background: none; color: #000; padding: 0 0 8pt; }
+  .pagina-guida .testata .sottotitolo { color: #333; }
+  .pagina-guida .percorso { display: none; }
+  .tabella tr { page-break-inside: avoid; }
   body.stampa-scheda .area-stampa { display: block; }
   .area-stampa h1 { font-size: 18pt; margin: 0 0 4pt; } .area-stampa h2 { font-size: 12pt; margin: 14pt 0 4pt; }
   .area-stampa .riquadro { border: 1px solid #000; padding: 8pt 10pt; white-space: pre-wrap; line-height: 1.7; }

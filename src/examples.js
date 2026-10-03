@@ -42,7 +42,7 @@
         { testo: '18 aprile 2026', strumento: true, spiegazione: 'La prossima riunione è l\'11 aprile 2026.' }
       ],
       falsiAllarmi: [],
-      nota: 'Errori inseriti: crescita 12% invece di 8%; tre punti di consegna invece di due; cognome sbagliato (Tonon invece di Toffolo); data della prossima riunione sbagliata.'
+      nota: 'Quattro errori di tipo diverso (un numero, un numero giusto nel posto sbagliato, un nome, una data) e tutti plausibili: nessuno «suona» sbagliato, si scopre solo confrontando con il verbale.'
     },
     {
       id: 'scheda',
@@ -62,7 +62,7 @@
         { testo: 'Alexa', strumento: true, spiegazione: 'La compatibilità con Alexa non è mai dichiarata: un dettaglio inventato che «suona bene».' }
       ],
       falsiAllarmi: [],
-      nota: 'Errori inseriti: autonomia 150 minuti invece di 120; garanzia 36 mesi invece di 24; compatibilità con Alexa mai dichiarata.'
+      nota: 'Il più insidioso è l\'ultimo: «Alexa» non cambia nessun numero, è semplicemente aggiunto. Un testo commerciale generato dall\'AI tende ad arricchire la scheda con ciò che «di solito» si dice di quel prodotto.'
     },
     {
       id: 'preventivo',

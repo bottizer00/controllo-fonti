@@ -32,6 +32,7 @@ function rng(seme) {
   };
 }
 const DEBUG = process.argv.includes('--debug');           // stampa le correzioni proposte sbagliate
+const DEBUG_MANCATI = process.argv.includes('--debug-mancati');   // stampa gli errori inseriti che non vengono segnalati
 let rnd = rng(20261003);
 const scegli = (lista) => lista[Math.floor(rnd() * lista.length)];
 const mescola = (lista) => lista.map(v => [rnd(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
@@ -75,13 +76,13 @@ function valoreDiverso(v, decimali, esclusi) {
 
 function elementiFonte(fonte) {
   const els = CF.estrai(fonte, { senzaCitazioni: true });
-  const numeri = new Map(), date = new Set(), orari = new Set();
+  const numeri = new Map(), date = new Set(), orari = new Set(), giornoMese = new Set();
   els.forEach(x => {
     if (x.cands) x.cands.forEach(v => numeri.set(String(Number(((v * x.scala)).toPrecision(12))), x));
-    if (x.tipo === 'data') date.add(x.d + '/' + x.m + '/' + x.y);
+    if (x.tipo === 'data') { date.add(x.d + '/' + x.m + '/' + x.y); giornoMese.add(x.d + '/' + x.m); }
     if (x.tipo === 'orario') orari.add(x.minuti);
   });
-  return { els, numeri, date, orari, norm: CF.normalizza(fonte) };
+  return { els, numeri, date, orari, giornoMese, norm: CF.normalizza(fonte) };
 }
 
 /* ---------- mutazioni ---------- */
@@ -120,7 +121,7 @@ function mutazioni(fonte, testo, risultato, fi) {
     if (e.d === null || e.d === undefined) return;
     for (let t = 0; t < 20; t++) {
       const g = 1 + Math.floor(rnd() * 28);
-      if (g === e.d || fi.date.has(g + '/' + e.m + '/' + e.y) || fi.date.has(g + '/' + e.m + '/null')) continue;
+      if (g === e.d || fi.giornoMese.has(g + '/' + e.m)) continue;     // il nuovo giorno non deve esistere gia' nella fonte
       out.push({ tipo: 'data (giorno)', it, nuovo: it.testo.replace(/^\d{1,2}/, String(g)) });
       break;
     }
@@ -132,7 +133,7 @@ function mutazioni(fonte, testo, risultato, fi) {
     const mese = MESI.findIndex(m => new RegExp('\\b' + m + '\\b', 'i').test(it.testo)) + 1;
     for (let t = 0; t < 20; t++) {
       const m2 = 1 + Math.floor(rnd() * 12);
-      if (m2 === mese || fi.date.has(e.d + '/' + m2 + '/' + e.y) || fi.date.has(e.d + '/' + m2 + '/null')) continue;
+      if (m2 === mese || fi.giornoMese.has(e.d + '/' + m2) || [...fi.date].some(k => k.startsWith('null/' + m2 + '/'))) continue;
       out.push({ tipo: 'data (mese)', it, nuovo: it.testo.replace(new RegExp('\\b' + MESI[mese - 1] + '\\b', 'i'), MESI[m2 - 1]) });
       break;
     }
@@ -193,6 +194,10 @@ function esegui() {
         const toccato = vm.items.find(i => i.inizio < nuovoFine && i.fine > mu.it.inizio);
         const m = rapporto.mutazioni[mu.tipo] || (rapporto.mutazioni[mu.tipo] = { n: 0, segnalati: 0, miss: 0, conSuggerimento: 0, suggerimentoGiusto: 0 });
         m.n++;
+        if (DEBUG_MANCATI && !(toccato && toccato.stato !== 'ok')) {
+          console.log('[' + mu.tipo + '] non segnalato: «' + mu.it.testo + '» -> «' + mu.nuovo + '»\n    …' +
+            testoMut.slice(Math.max(0, mu.it.inizio - 70), nuovoFine + 40).replace(/\n/g, ' ') + '…');
+        }
         if (toccato && toccato.stato !== 'ok') {
           m.segnalati++;
           if (toccato.stato === 'miss') m.miss++;

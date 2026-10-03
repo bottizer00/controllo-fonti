@@ -1,0 +1,4 @@
+schermate/
+node_modules/
+benchmark/risultati.json
+benchmark/segnalati.json
