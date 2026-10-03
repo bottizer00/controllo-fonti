@@ -69,6 +69,11 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     await s.js('document.querySelector(\'.chip-esempio[data-id="contratto"]\').click()');
     await sleep(300);
     verifica((await s.js('document.querySelectorAll(".scheda-voce").length')) === 3, 'esempio del contratto: tre voci (percentuale, citazione, nome)');
+    await s.js('document.querySelector(\'.chip-esempio[data-id="preventivo"]\').click()');
+    await sleep(300);
+    const elencoPreventivo = await s.js('document.getElementById("elenco").innerText');
+    verifica(/2\.720 × 10% = 272/.test(elencoPreventivo) && /eredita l'errore/.test(elencoPreventivo),
+      'preventivo: il 272 è spiegato come 2.720 × 10% e si dice che eredita l\'errore dell\'aliquota');
     await s.js('document.getElementById("btn-pulisci").click(); document.getElementById("btn-verifica").click()');
     verifica(/Incolla/.test(await s.js('document.getElementById("messaggio").textContent')), 'campi vuoti: messaggio chiaro');
     await s.js('document.getElementById("fonte").value = "Budget 50.000 euro, firmato il 3 maggio 2026 alle ore 9.30."; document.getElementById("ai").value = "Budget 60.000 euro, firmato il 3 maggio 2026 alle 9:30."; document.getElementById("btn-verifica").click()');

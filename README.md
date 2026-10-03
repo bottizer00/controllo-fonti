@@ -27,6 +27,7 @@ Lo strumento nasce da un caso vero: per preparare un esame avevo fatto riassumer
 
 - **Numeri**, percentuali e importi in formato italiano e inglese (`1.300`, `1,3`, «1,3 milioni»), scritti in lettere («ventuno», «due milioni ottocentomila», «sei virgola otto») o con unità attaccate (`250,3g`).
 - **Date** in formati diversi (`14/03/2026` = «14 marzo 2026» = «quattordici marzo duemilaventisei»), senza anno (`15/08`) o in elenco («22, 29 gennaio e 5 febbraio»); **orari** (`14.45` = `14:45`, «ore 9», `9-12:30`).
+- **Valori calcolati dall'AI** (una percentuale, un totale, una differenza, una quota): se non sono nella fonte ma tornano con i numeri del testo, lo strumento scrive il calcolo («2.720 × 10% = 272») e avverte quando un numero di partenza non torna: i conti coerenti con un dato sbagliato restano sbagliati. Si cercano solo valori abbastanza precisi, per non trovare calcoli per caso.
 - **Nomi**, sigle e codici (titoli come «Dott.» o «Ing.» e sigle come «CdA» o «SpA» non contano come nomi), **citazioni** tra virgolette cercate parola per parola, **riferimenti** («art. 4», «artt. 32 e 33», «sentenza n. 15/2026»), **telefoni**, email e link.
 - Sa che un titolo markdown (`## Verbale`) o un'etichetta in grassetto non sono nomi propri, e che l'AI scrive spesso in markdown.
 

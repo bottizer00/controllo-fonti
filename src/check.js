@@ -1057,7 +1057,8 @@
     var idx = indicizzaFonte(fonte);
     var tokensAI = tokenizza(testoAI);
     var budget = 400;                                               // le correzioni suggerite si calcolano per i primi casi
-    var items = estrai(testoAI).map(function (x) {
+    var elementiAI = estrai(testoAI);
+    var items = elementiAI.map(function (x) {
       var r, ctxAI = new Set();
       if (ANCORE[x.tipo]) ctxAI = stemsAttorno(tokensAI, x.inizio, x.fine, 2, 2);
       if (x.tipo === 'numero' || x.tipo === 'percentuale' || x.tipo === 'importo') r = controllaNumero(x, idx, ctxAI, tokensAI);
@@ -1084,9 +1085,80 @@
       return { tipo: x.tipo, etichetta: etichetta(x.tipo), testo: testoEl, inizio: inizio, fine: x.fine,
         stato: r.stato, motivo: r.motivo, fonte: r.fonte || null, suggerimento: r.suggerimento || null };
     });
+    applicaCalcoli(items, elementiAI);
     var riepilogo = { totale: items.length, ok: 0, warn: 0, miss: 0 };
     items.forEach(function (i) { riepilogo[i.stato]++; });
     return { items: items, riepilogo: riepilogo };
+  }
+
+  /* ---------- valori calcolati dall'AI ---------- */
+
+  function formatta(v, d) {
+    var s = Math.abs(v).toFixed(d).split('.');
+    s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (v < 0 ? '-' : '') + s.join(',');
+  }
+
+  /*
+   * Un numero che nella fonte non c'e' puo' essere il risultato di un calcolo dell'AI: una percentuale (parte / totale),
+   * una somma, una differenza, una percentuale di un importo, un prodotto. Si cerca se torna con i numeri vicini nel testo
+   * dell'AI: se si', non e' piu' "non trovato" ma "da controllare", con il calcolo scritto. Se un numero di partenza non
+   * torna con la fonte, lo si dice: i conti coerenti con un dato sbagliato restano sbagliati.
+   * Per non trovare calcoli per caso si tentano solo valori abbastanza precisi (finestra di arrotondamento sotto lo 0,4%).
+   */
+  function applicaCalcoli(items, elementi) {
+    var num = [];
+    elementi.forEach(function (x, k) {
+      var anno = x.decimali === 0 && x.cands && /^\d{4}$/.test(x.testo) && x.cands[0] >= 1900 && x.cands[0] <= 2100;     // 2022 e' un anno, 1.940 no      // gli anni e i numeri in lettere non sono operandi
+      if (x.cands && !x.parola && !anno && (x.tipo === 'numero' || x.tipo === 'percentuale' || x.tipo === 'importo')) {
+        num.push({ k: k, pct: x.tipo === 'percentuale', v: x.cands[0] * x.scala, d: x.decimali, scala: x.scala, testo: x.testo });
+      }
+    });
+    if (num.length < 3 || num.length > 400) return;
+    var VICINI = 5, trovati = [];
+    num.forEach(function (t, ti) {
+      if (items[t.k].stato !== 'miss' || t.v <= 0) return;
+      var tol = 0.5 * Math.pow(10, -t.d) * t.scala;
+      if (tol / t.v > 0.004) return;
+      var vicini = num.filter(function (o, oi) { return oi !== ti && Math.abs(oi - ti) <= VICINI; });
+      var altri = num.filter(function (o, oi) { return oi !== ti; });
+      var tr = null;
+      function prova(valore, formula, operandi) {
+        if (!tr && isFinite(valore) && Math.abs(valore - t.v) <= tol * 1.0000001) tr = { formula: formula, operandi: operandi };
+      }
+      var dec = t.pct ? t.d : t.d, dm = function (v) { return formatta(v / t.scala, dec); };
+      vicini.forEach(function (a) {
+        if (a.pct) return;
+        if (t.pct) {                                                  // percentuale = parte / totale
+          altri.forEach(function (b) { if (!b.pct && b.v > a.v) prova(a.v / b.v * 100, a.testo + ' ÷ ' + b.testo + ' × 100 = ' + formatta(a.v / b.v * 100, dec) + '%', [a, b]); });
+        } else {                                                      // quota di un importo: importo x percentuale
+          vicini.forEach(function (b) { if (b.pct) prova(a.v * b.v / 100, a.testo + ' × ' + b.testo + ' = ' + dm(a.v * b.v / 100), [a, b]); });
+        }
+      });
+      if (!t.pct) {
+        vicini.forEach(function (a, i) {
+          if (a.pct) return;
+          vicini.forEach(function (b, j) {
+            if (b.pct || i === j) return;
+            if (i < j) {
+              prova(a.v + b.v, a.testo + ' + ' + b.testo + ' = ' + dm(a.v + b.v), [a, b]);
+              prova(a.v * b.v, a.testo + ' × ' + b.testo + ' = ' + dm(a.v * b.v), [a, b]);
+            }
+            if (a.v > b.v) { prova(a.v - b.v, a.testo + ' − ' + b.testo + ' = ' + dm(a.v - b.v), [a, b]); prova(a.v / b.v, a.testo + ' ÷ ' + b.testo + ' = ' + formatta(a.v / b.v, dec), [a, b]); }
+          });
+        });
+      }
+      if (tr) trovati.push({ t: t, calcolo: tr });
+    });
+    trovati.forEach(function (r) {
+      var it = items[r.t.k], sbagliati = r.calcolo.operandi.filter(function (o) { return items[o.k].stato === 'miss'; });
+      it.stato = 'warn';
+      it.calcolo = r.calcolo.formula;
+      it.motivo = 'Non e\' scritto nella fonte, ma torna con un calcolo sui numeri del testo: ' + r.calcolo.formula + '.' +
+        (sbagliati.length ? ' Attenzione: ' + sbagliati.map(function (o) { return '«' + o.testo + '»'; }).join(' e ') + ' non torna con la fonte, quindi il risultato eredita l\'errore.'
+          : ' Controlla che il calcolo sia quello giusto.');
+      it.suggerimento = null;
+    });
   }
 
   /* ---------- presentazione ---------- */

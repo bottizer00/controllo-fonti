@@ -166,6 +166,7 @@
     if (it.suggerimento) spans.push({ inizio: it.suggerimento.inizio, fine: it.suggerimento.fine, classe: 'f-sug' });
     if (it.stato === 'ok') didascalia = it.fonte ? 'Trovato qui, evidenziato in verde' : 'Trovato nella fonte (la posizione esatta non è disponibile)';
     else if (it.stato === 'warn') didascalia = it.fonte ? 'In giallo dove compare nella fonte' + (it.suggerimento ? '; in azzurro cosa c\'è nello stesso contesto' : '') : 'Le parole ci sono ma non insieme';
+    else if (it.calcolo) didascalia = 'Questo numero non è nella fonte: è il risultato di un calcolo sui numeri del testo (' + it.calcolo + ')';
     else didascalia = it.suggerimento ? 'Non trovato. In azzurro, nello stesso contesto, la fonte riporta altro' : 'Nella fonte non c\'è nessun passaggio corrispondente';
     UI.messaggio($('stato-fonte'), didascalia);
     $('stato-fonte').className = 'aiuto';

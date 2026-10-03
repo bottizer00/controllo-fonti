@@ -116,6 +116,28 @@ test('"La Seconda guerra mondiale" non e\' un nome da cercare nella fonte', () =
   assert.deepEqual(r.items.filter(i => i.tipo === 'nome').map(i => i.testo), []);
 });
 
+test('un valore calcolato dall\'AI torna con un calcolo: percentuale, somma, differenza, quota; e un dato di partenza sbagliato si dice', () => {
+  const fonte = 'Ricavi totali 2.800 euro. Lombardia 1.240 euro. Veneto 700 euro.';
+  const r = CF.verifica(fonte, 'Su ricavi di 2.800 euro la Lombardia pesa 1.240 euro (44,3%) e il Veneto 700 euro, per 1.940 euro insieme.');
+  const da = Object.fromEntries(r.items.map(i => [i.testo, i]));
+  assert.equal(da['44,3%'].stato, 'warn');
+  assert.equal(da['44,3%'].calcolo, '1.240 ÷ 2.800 × 100 = 44,3%');
+  assert.equal(da['1.940'].calcolo, '1.240 + 700 = 1.940');
+  assert.match(da['44,3%'].motivo, /Controlla che il calcolo/);
+  const e = EX.find(x => x.id === 'preventivo'), p = Object.fromEntries(CF.verifica(e.fonte, e.ai).items.map(i => [i.testo, i]));
+  assert.equal(p['272'].calcolo, '2.720 × 10% = 272');
+  assert.match(p['272'].motivo, /«10%» non torna con la fonte/);
+  assert.equal(p['2.992'].calcolo, '2.720 + 272 = 2.992');
+  assert.equal(p['10%'].stato, 'miss');                          // il dato di partenza resta non trovato
+});
+
+test('i calcoli non si trovano per caso: valori imprecisi, anni e numeri in lettere restano non trovati', () => {
+  const fonte = 'Il progetto del 2022 ha coinvolto 40 persone.';
+  assert.equal(CF.verifica(fonte, 'Nel 2020 su 2022 ne sono rimasti due, con 25% e 40 persone e 12 su 40.').items.filter(i => i.calcolo).length, 0);
+  const r = CF.verifica('Budget 1.000 euro.', 'Spesi 347 euro su 1.000 euro, cioè il 33% e 7 volte 113.');
+  assert.equal(r.items.filter(i => i.calcolo).length, 0);        // 33% ha una finestra di arrotondamento troppo larga
+});
+
 test('telefoni: stesso numero in formati diversi', () => {
   assert.equal(stato('Chiamare lo 0432 511934 in orario di ufficio.', 'Telefono: 0432-511934.', '0432-511934'), 'ok');
   assert.equal(stato('Cell. 351 595 3818.', 'Cellulare +39 351 5953818.', '+39 351 5953818'), 'ok');
