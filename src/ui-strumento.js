@@ -39,6 +39,12 @@
       if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) { e.preventDefault(); caricaFile(e.dataTransfer.files[0], area, nome); }
     });
     ta.addEventListener('input', function () { aggiornaContatori(); deselezionaEsempi(); });
+    $('pulisci-' + area).addEventListener('click', function () {
+      var prima = ta.value, dopo = FILE.pulisciPdf(prima);
+      if (dopo === prima.trim() || !prima.trim()) { UI.messaggio($('messaggio'), prima.trim() ? 'Il testo era già in ordine: niente da sistemare.' : 'La casella è vuota.', ''); return; }
+      ta.value = dopo; aggiornaContatori(); deselezionaEsempi();
+      UI.messaggio($('messaggio'), 'Testo sistemato nella casella «' + nome + '»: tolti i trattini a fine riga e le righe spezzate. Con Ctrl+Z torni indietro.', 'ok');
+    });
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); verifica(); } });
   });
 

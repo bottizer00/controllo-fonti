@@ -70,6 +70,7 @@
           <label for="fonte">1. Documento originale (la fonte)</label>
           <span class="contatore" id="cont-fonte"></span>
           <button type="button" class="link" id="carica-fonte">Carica un file</button>
+          <button type="button" class="link" id="pulisci-fonte" title="Toglie i trattini a fine riga e le righe spezzate dei testi copiati da un PDF">Sistema da PDF</button>
         </div>
         <textarea id="fonte" rows="12" spellcheck="false" placeholder="Incolla qui il testo originale, oppure trascina un file…"></textarea>
         <input type="file" id="file-fonte" hidden accept=".txt,.md,.csv,.json,.docx,text/plain">
@@ -79,6 +80,7 @@
           <label for="ai">2. Testo scritto dall'AI</label>
           <span class="contatore" id="cont-ai"></span>
           <button type="button" class="link" id="carica-ai">Carica un file</button>
+          <button type="button" class="link" id="pulisci-ai" title="Toglie i trattini a fine riga e le righe spezzate dei testi copiati da un PDF">Sistema da PDF</button>
         </div>
         <textarea id="ai" rows="12" spellcheck="false" placeholder="Incolla qui il riassunto o la risposta dell'AI, oppure trascina un file…"></textarea>
         <input type="file" id="file-ai" hidden accept=".txt,.md,.csv,.json,.docx,text/plain">
@@ -91,7 +93,7 @@
       <span class="suggerimento-tasti">oppure Ctrl+Invio</span>
       <span id="messaggio" class="messaggio" role="status" aria-live="polite"></span>
     </div>
-    <p class="aiuto-file">File accettati: .txt, .md, .csv, .json e Word (.docx). Per un PDF apri il documento, copia il testo e incollalo nella casella.</p>
+    <p class="aiuto-file">File accettati: .txt, .md, .csv, .json e Word (.docx). Per un PDF apri il documento, copia il testo, incollalo nella casella e premi «Sistema da PDF» (toglie i trattini a fine riga e le righe spezzate).</p>
 
     <details class="prepara" id="prepara">
       <summary>Non hai ancora il testo dell'AI? Prepara un prompt che rende il controllo più facile</summary>

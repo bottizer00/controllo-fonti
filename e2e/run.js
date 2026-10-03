@@ -104,6 +104,13 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     await sleep(300);
     verifica(/inglese/.test(await s.js('document.getElementById("messaggio").textContent')), 'un testo inglese viene segnalato come tale');
 
+    console.log('# Testo copiato da un PDF');
+    await s.js('document.getElementById("btn-pulisci").click(); document.getElementById("fonte").value = "Il fatturato è stato di 2,4 milioni di euro, in cre-\\nscita dell\'8% rispetto\\nal 2025."; document.getElementById("pulisci-fonte").click()');
+    verifica((await s.js('document.getElementById("fonte").value')) === 'Il fatturato è stato di 2,4 milioni di euro, in crescita dell\'8% rispetto al 2025.', '«Sistema da PDF» toglie il trattino a fine riga e unisce le righe spezzate');
+    verifica(/Testo sistemato/.test(await s.js('document.getElementById("messaggio").textContent')), '«Sistema da PDF» dice cosa ha fatto');
+    await s.js('document.getElementById("pulisci-fonte").click()');
+    verifica(/già in ordine/.test(await s.js('document.getElementById("messaggio").textContent')), 'su un testo già in ordine dice che non c\'è niente da fare');
+
     console.log('# Caricamento file');
     const docx = path.join(tmp, 'fonte.docx');
     const xml = '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +

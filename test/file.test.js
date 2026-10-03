@@ -56,6 +56,23 @@ test('testo semplice: utf-8, utf-8 con BOM, windows-1252', () => {
   assert.equal(F.decodificaTesto(win.buffer), 'Perché è');
 });
 
+test('testo copiato da un PDF: trattini a fine riga, righe spezzate, legature, paragrafi e elenchi intatti', () => {
+  const pdf = 'La stima è stata riassun-\nta dal comitato. Il ﬁne del pro-\ngetto è chiaro e\nil budget è di 1.250\neuro in totale.\n\nSecondo paragrafo che\nfinisce qui.\n- punto uno\n- punto due\nFine.\n1.\nsegue una voce';
+  assert.equal(F.pulisciPdf(pdf),
+    'La stima è stata riassunta dal comitato. Il fine del progetto è chiaro e il budget è di 1.250 euro in totale.\n\n' +
+    'Secondo paragrafo che finisce qui.\n- punto uno\n- punto due\nFine.\n1.\nsegue una voce');
+  assert.equal(F.pulisciPdf('a­bc  d\r\ne'), 'abc d e');                       // trattino morbido, spazi doppi, a capo di Windows
+  assert.equal(F.pulisciPdf('Un testo gia\' in ordine.\nSecondo rigo.'), 'Un testo gia\' in ordine.\nSecondo rigo.');
+  assert.equal(F.pulisciPdf(''), '');
+  assert.equal(F.pulisciPdf(null), '');
+});
+
+test('il testo ripulito si confronta bene: un numero spezzato su due righe torna a essere un numero', () => {
+  const CF = require('../src/check.js');
+  const fonte = F.pulisciPdf('Il fatturato è stato di 2,4 milioni di euro, in cre-\nscita dell\'8% rispetto al 2025.');
+  assert.deepEqual(CF.verifica(fonte, 'Fatturato di 2,4 milioni, in crescita dell\'8%.').items.map(i => i.stato), ['ok', 'ok']);
+});
+
 function fileFinto(nome, contenuto, tipo) {
   const buf = typeof contenuto === 'string' ? new TextEncoder().encode(contenuto) : new Uint8Array(contenuto);
   return { name: nome, size: buf.length, type: tipo || '', arrayBuffer: () => Promise.resolve(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.length)) };

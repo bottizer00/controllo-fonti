@@ -39,7 +39,7 @@ Lo strumento nasce da un caso vero: per preparare un esame avevo fatto riassumer
 4. **Per i nomi conta la vicinanza**: due parole sono un nome solo se nella fonte stanno attaccate (o separate da «di», «del»…). «Elisa Tonon» non è verificato se la fonte ha *Elisa Toffolo* e *Anna Tonon*. Le parole che nella fonte compaiono solo in minuscolo («Partenza», «Laurea») sono maiuscole da titolo dell'AI, non nomi.
 5. Per ogni elemento mancante si cerca nella fonte il valore più vicino per contesto e, solo se plausibile (stessa grandezza, prove sufficienti), lo si propone. Una correzione sbagliata è peggio di nessuna correzione.
 
-Tutto è JavaScript senza dipendenze: nessun framework, nessuna build, nessuna rete. Per i file Word il `.docx` (un archivio zip) è letto a mano con gli strumenti del browser, con un tetto alla dimensione decompressa.
+Tutto è JavaScript senza dipendenze: nessun framework, nessuna build, nessuna rete. Per i testi copiati da un PDF c'è «Sistema da PDF»: toglie i trattini a fine riga, unisce le righe spezzate e scioglie le legature, prima del confronto. Per i file Word il `.docx` (un archivio zip) è letto a mano con gli strumenti del browser, con un tetto alla dimensione decompressa.
 
 ## Quanto funziona (misurato)
 

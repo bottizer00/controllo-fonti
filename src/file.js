@@ -119,5 +119,20 @@
     });
   }
 
-  return { leggiFile: leggiFile, testoDaDocx: testoDaDocx, xmlATesto: xmlATesto, decodificaTesto: decodificaTesto, MAX_FILE: MAX_FILE };
+  /*
+   * Sistema un testo copiato da un PDF: toglie i trattini a fine riga ("riassun-" a capo "to"), unisce le righe spezzate
+   * a meta' frase, scioglie le legature e toglie i trattini morbidi. I paragrafi (riga vuota), gli elenchi puntati
+   * e le righe che finiscono con un punto restano come sono.
+   */
+  function pulisciPdf(testo) {
+    var t = String(testo || '').replace(/\r\n?/g, '\n')
+      .replace(/­/g, '')
+      .replace(/ﬀ/g, 'ff').replace(/ﬁ/g, 'fi').replace(/ﬂ/g, 'fl').replace(/ﬃ/g, 'ffi').replace(/ﬄ/g, 'ffl')
+      .replace(/[ \t]+\n/g, '\n');
+    t = t.replace(/(\p{L})[-‐‑]\n(\p{Ll})/gu, '$1$2');                                  // trattino a fine riga
+    t = t.replace(/([^\n.!?:;•*\-–])\n(?=[\p{Ll}(«"“'])/gu, '$1 ');                    // riga spezzata a meta' frase
+    return t.replace(/ {2,}/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  return { pulisciPdf: pulisciPdf, leggiFile: leggiFile, testoDaDocx: testoDaDocx, xmlATesto: xmlATesto, decodificaTesto: decodificaTesto, MAX_FILE: MAX_FILE };
 });
