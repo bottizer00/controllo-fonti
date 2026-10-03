@@ -44,7 +44,7 @@
     'loro questo questa questi queste quel quella quelli quelle ogni tutto tutti tutte tutta ' +
     'molto molti molte poco pochi nuovo nuova nuovi nuove euro ' +
     'all dell nell sull dall coll quell quest anch com dov').split(' '));
-  var UNITA_BREVI = new Set('kg mg ml cm mm km db kw mq mc gb mb tb hz lt hl ha'.split(' '));
+  var UNITA_BREVI = new Set('kg mg ml cm mm km db kw mq mc gb mb tb hz lt hl ha mw gw tw'.split(' '));
 
   var FILL = '\u0001';                       // riempimento che spezza i nomi (a differenza dello spazio)
   var FILTRO_CONNETTORI = '(?:di|de|del|della|dei|degli|delle|da|dal|dalla|van|von|la|le|lo)';
@@ -131,21 +131,40 @@
 
   // Come sopra, ma per tutti gli elementi della fonte insieme: ogni parola appartiene al numero piu' vicino,
   // cosi' "due nuovi punti di consegna ... 3 addetti" attribuisce "punti di consegna" al 2 e "addetti" al 3.
-  function territori(tokens, ancore, perLato) {
-    return ancore.map(function (an, k) {
-      var prev = ancore[k - 1], next = ancore[k + 1];
+  // Il territorio non attraversa la fine della frase ("... su 9490 m². Area verde X: sorge in zona Y su 10620 m²": "Area verde X"
+  // appartiene al 10620, non al 9490) e due numeri uniti da una semplice congiunzione ("tra il 1887 e il 1952", "da 38.000 a 45.000")
+  // condividono lo stesso contesto.
+  function territori(tokens, ancore, perLato, testo) {
+    var frase = [], id = 0, k0;
+    for (k0 = 0; k0 < tokens.length; k0++) {
+      if (k0 > 0 && /[.!?;]\s|\n/.test(testo.slice(tokens[k0 - 1].e, tokens[k0].i + 1))) id++;
+      frase.push(id);
+    }
+    var sets = ancore.map(function (an, k) {
+      var prev = ancore[k - 1], next = ancore[k + 1], f = frase[Math.min(an.a, tokens.length - 1)];
       var sx = prev ? Math.min(an.a, (prev.b + an.a) >> 1) : 0;
       var dx = next ? Math.max(an.b, (an.b + next.a + 1) >> 1) : tokens.length;
       var set = new Set(), n = 0, j;
-      for (j = an.a - 1; j >= sx && n < perLato; j--) {
+      for (j = an.a - 1; j >= sx && n < perLato && frase[j] === f; j--) {
         if (parolaDiContenuto(tokens[j])) { set.add(radice(tokens[j])); n++; }
       }
       n = 0;
-      for (j = an.b; j < dx && n < perLato; j++) {
+      for (j = an.b; j < dx && n < perLato && frase[j] === f; j++) {
         if (parolaDiContenuto(tokens[j])) { set.add(radice(tokens[j])); n++; }
       }
       return set;
     });
+    function unitiDaCongiunzione(p, q) {                              // fra p e q solo parole vuote (e, il, al, a, tra...), al massimo tre
+      var d = q.a - p.b;
+      if (d < 0 || d > 3) return false;
+      for (var t = p.b; t < q.a; t++) if (tokens[t].num || !STOP.has(tokens[t].t)) return false;
+      return d === 0 || frase[p.b] === frase[q.a - 1];
+    }
+    function fondi(da, a) { a.forEach(function (st) { da.add(st); }); }
+    var i;
+    for (i = 1; i < ancore.length; i++) if (unitiDaCongiunzione(ancore[i - 1], ancore[i])) fondi(sets[i], sets[i - 1]);
+    for (i = ancore.length - 2; i >= 0; i--) if (unitiDaCongiunzione(ancore[i], ancore[i + 1])) fondi(sets[i], sets[i + 1]);
+    return sets;
   }
 
   function intersezione(a, b) {
@@ -174,7 +193,7 @@
 
   // Restituisce i valori possibili del token (formato italiano per primo, poi quello inglese).
   function parseNumero(raw) {
-    var s = raw.replace(/[  ]/g, '.');
+    var s = raw.replace(/[    ]/g, '.');
     var cands = [], decimali = 0;
     if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {            // 1.300  1.300.000  1.300,50
       var parteDec = s.indexOf(',') >= 0 ? s.split(',')[1] : '';
@@ -464,7 +483,7 @@
 
   function estraiNumeri(testo, opzioni) {
     var out = [], m;
-    var re = /(?=\d)(?<![\p{L}\p{N}_])(\d{1,3}(?:[.  ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
+    var re = /(?=\d)(?<![\p{L}\p{N}_])(\d{1,3}(?:[.    ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
     while ((m = re.exec(testo)) !== null) {
       var inizio = m.index, fine = m.index + m[0].length;
       var dopo = testo.charAt(fine);
@@ -584,6 +603,7 @@
       var originali = tutteOr.filter(function (p, n) { return n === 0 || !CONNETTORI_RE.test(p); });   // "Banca d'Italia"
       var parole = originali.map(normalizza), tutte = tutteOr.map(normalizza);
       if (iniziaFrase && parole.length === 1) continue;           // "Il", "Secondo", "Inoltre"...
+      if (iniziaFrase && parole.length === 2 && DETERMINANTI.has(parole[0]) && (parole[1].length < 3 || NON_NOMI.has(parole[1]))) continue;   // "La Seconda guerra mondiale"
       if (parole.length === 1 && (parole[0].length < 3 || NON_NOMI.has(parole[0]))) continue;
       if (parole.length === 1 && /^[ 	]*(?:\d|)/.test(spaziAcr.slice(m.index + m[0].length, m.index + m[0].length + 12))) continue;   // "Finale 20%", "Test 5"
 
@@ -647,7 +667,7 @@
       while (b < tokens.length && tokens[b].i < x.fine) b++;
       ancore.push({ el: x, a: a, b: b });
     });
-    var ctxs = territori(tokens, ancore, 6);
+    var ctxs = territori(tokens, ancore, 6, testo);
     ancore.forEach(function (an, k) {                              // le 2+2 parole piu' vicine, piu' tutto il "territorio"
       var vicino = stemsAttorno(tokens, an.el.inizio, an.el.fine, 2, 2);
       ctxs[k].forEach(function (st) { vicino.add(st); });

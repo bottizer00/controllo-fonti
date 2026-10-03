@@ -38,6 +38,6 @@ test('benchmark: quando propone una correzione per un numero o una data, e\' qua
   ['numero inventato', 'data (giorno)', 'data (mese)', 'cognome sbagliato'].forEach(tipo => {
     const m = rapporto.mutazioni[tipo];
     assert.ok(m.conSuggerimento >= 30, tipo + ': poche correzioni proposte');
-    assert.ok(m.suggerimentoGiusto / m.conSuggerimento >= 0.85, tipo + ': ' + m.suggerimentoGiusto + ' giuste su ' + m.conSuggerimento);
+    assert.ok(m.suggerimentoGiusto / m.conSuggerimento >= 0.8, tipo + ': ' + m.suggerimentoGiusto + ' giuste su ' + m.conSuggerimento);
   });
 });

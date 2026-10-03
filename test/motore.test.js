@@ -103,6 +103,19 @@ test('"alle 3 sedi" nella fonte resta un numero (non un orario) e si confronta c
   assert.deepEqual(CF.estrai('Assegnati alle 3 sedi.', { senzaCitazioni: true, seiNumero: true }).map(x => x.tipo), ['numero']);
 });
 
+test('migliaia separate da uno spazio, come nei testi veri: "2 408", "6 795 000"', () => {
+  const v = testo => CF.estrai(testo).filter(x => x.cands).map(x => x.cands[0] * x.scala);
+  assert.deepEqual(v('Romania 2 408 Albania 1 590, tra 77 000 e 99 000 persone, 6 795 000 profughi.'), [2408, 1590, 77000, 99000, 6795000]);
+  assert.deepEqual(v('Il 12 3456 e 10 100 case e 3 200 GWh'), [12, 3456, 10100, 3200]);          // un gruppo di quattro cifre non e' migliaia
+  assert.equal(stato('Residenti stranieri: 14 536 presenze.', 'Sono 14.536 residenti stranieri.', '14.536'), 'ok');
+  assert.equal(stato('Morirono tra le 77 000 e le 99 000 persone.', 'Morirono tra 77.000 e 99.000 persone.', '77.000'), 'ok');
+});
+
+test('"La Seconda guerra mondiale" non e\' un nome da cercare nella fonte', () => {
+  const r = CF.verifica('Il conflitto fu lungo.', 'La Seconda guerra mondiale fu lunga. Il Quarto anno fu duro.');
+  assert.deepEqual(r.items.filter(i => i.tipo === 'nome').map(i => i.testo), []);
+});
+
 test('telefoni: stesso numero in formati diversi', () => {
   assert.equal(stato('Chiamare lo 0432 511934 in orario di ufficio.', 'Telefono: 0432-511934.', '0432-511934'), 'ok');
   assert.equal(stato('Cell. 351 595 3818.', 'Cellulare +39 351 5953818.', '+39 351 5953818'), 'ok');

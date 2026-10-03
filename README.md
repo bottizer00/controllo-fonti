@@ -44,22 +44,22 @@ Tutto è JavaScript senza dipendenze: nessun framework, nessuna build, nessuna r
 
 La cartella `benchmark/` contiene **24 documenti inventati** (verbali, circolari, preventivi, contratti, bandi, schede tecniche, articoli…) e **72 riassunti scritti da un'AI** (Gemini) che ha letto solo il documento: un paragrafo, un elenco in markdown, la risposta a una domanda. `npm run benchmark` ripete la misura.
 
-**Errori inseriti a macchina** (613 casi, uno alla volta, seme fisso):
+**Errori inseriti a macchina** (614 casi, uno alla volta, seme fisso):
 
 | Errore inserito | Segnalato | Correzione proposta giusta |
 |---|---|---|
-| Cognome sbagliato | 100% | 93% |
-| Numero inventato | 99,5% | 93% |
-| Giorno di una data | 100% | 90% |
-| Mese di una data | 98,6% | 91% |
+| Cognome sbagliato | 100% | 92% |
+| Numero inventato | 100% | 92% |
+| Giorno di una data | 100% | 84% |
+| Mese di una data | 98,6% | 98% |
 | Orario | 100% | – |
-| **Numero vero della fonte messo nel posto sbagliato** | **68%** | – |
-| **Totale** | **93,6%** | |
+| **Numero vero della fonte messo nel posto sbagliato** | **74%** | – |
+| **Totale** | **94,8%** | |
 
-**Falsi allarmi** sui riassunti originali: 67 segnalazioni su 1.793 elementi (3,7%). Le ho riviste **tutte a mano**: 21 erano problemi veri (valori calcolati, dedotti o sbagliati dall'AI, come 8.350 m² invece di 8.750 o un orario di ritorno inventato) e 46 falsi allarmi (2,6% degli elementi), quasi sempre numeri presenti nella fonte con parole diverse intorno (una tabella riscritta, un sinonimo). Le etichette sono in `benchmark/etichette.json`.
+**Falsi allarmi** sui riassunti originali: 68 segnalazioni su 1.793 elementi (3,8%). Le ho riviste **tutte a mano**: 21 erano problemi veri (valori calcolati, dedotti o sbagliati dall'AI, come 8.350 m² invece di 8.750 o un orario di ritorno inventato) e 47 falsi allarmi (2,6% degli elementi), quasi sempre numeri presenti nella fonte con parole diverse intorno (una tabella riscritta, un sinonimo). Le etichette sono in `benchmark/etichette.json`.
 
 Come leggerli, onestamente:
-- il caso più difficile, un numero esatto messo nel posto sbagliato, è quello in cui lo strumento sbaglia di più: dipende da quanto il contesto cambia;
+- il caso più difficile, un numero esatto messo nel posto sbagliato, è quello in cui lo strumento sbaglia di più (circa uno su quattro sfugge): dipende da quanto il contesto cambia;
 - i documenti sono sintetici e i riassunti vengono da un solo modello: i numeri valgono per questo corpus, non per ogni testo;
 - le soglie sono in un test (`test/benchmark.test.js`): se un ritocco al motore peggiora i risultati, la suite fallisce.
 

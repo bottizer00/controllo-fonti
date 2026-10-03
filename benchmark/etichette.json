@@ -49,7 +49,6 @@
  "doc16/elenco/92%": "falso",
  "doc16/domanda/20": "vero",
  "doc16/domanda/92%": "falso",
- "doc18/paragrafo/45.000": "falso",
  "doc20/domanda/1.950": "vero",
  "doc20/domanda/250": "vero",
  "doc21/paragrafo/12:15": "vero",
@@ -65,5 +64,7 @@
  "doc24/elenco/620": "falso",
  "doc24/elenco/20%": "falso",
  "doc24/elenco/3.469,40": "falso",
- "doc24/domanda/tre": "vero"
+ "doc24/domanda/tre": "vero",
+ "doc10/domanda/2": "falso",
+ "doc14/domanda/18.600": "falso"
 }
