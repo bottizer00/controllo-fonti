@@ -86,7 +86,7 @@
       disegna();
       var ms = Date.now() - inizio, testo = '';
       if (CF.rilevaLingua(ai) === 'en' || CF.rilevaLingua(fonte) === 'en') {
-        testo = 'Il testo sembra in inglese: numeri e date si controllano, ma nomi e mesi in inglese sono letti peggio (lo strumento è pensato per l\'italiano).';
+        testo = 'Il testo sembra in inglese: date, numeri, importi e orari am/pm si controllano come in italiano; nomi e parole di contesto sono letti con meno precisione (lo strumento è pensato per l\'italiano).';
       } else if (ms > 1500) {
         testo = 'Controllo eseguito in ' + (ms / 1000).toFixed(1).replace('.', ',') + ' secondi.';
       }

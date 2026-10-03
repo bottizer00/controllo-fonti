@@ -19,6 +19,14 @@
   var MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio',
     'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
   var MESE_RE = MESI.join('|');
+  // Inglese di base: "March 14, 2026", "14th of March", "twenty-one", "two million", "3:30 pm".
+  var MESI_EN = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+  var MESE_EN_RE = MESI_EN.join('|') + '|sept|jan|feb|apr|jun|jul|aug|sep|oct|nov|dec';
+  function meseEn(nome) { return MESI_EN.map(function (m) { return m.slice(0, 3); }).indexOf(nome.toLowerCase().slice(0, 3)) + 1; }
+  var UNITA_EN = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+    thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19 };
+  var DECINE_EN = { twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90 };
+  var SCALE_EN = { thousand: 1e3, million: 1e6, billion: 1e9 };
 
   // Numeri in lettere: "tre", "ventuno", "centottanta", "duemilacinquecento", "dodici mila", "un milione".
   var UNITA = { uno: 1, un: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9 };
@@ -27,7 +35,7 @@
   var DECINE = { venti: 20, trenta: 30, quaranta: 40, cinquanta: 50, sessanta: 60, settanta: 70, ottanta: 80,
     novanta: 90 };
   var SCALE = { mila: 1e3, mille: 1e3, milione: 1e6, milioni: 1e6, miliardo: 1e9,
-    miliardi: 1e9, mln: 1e6, mld: 1e9 };
+    miliardi: 1e9, mln: 1e6, mld: 1e9, thousand: 1e3, million: 1e6, millions: 1e6, billion: 1e9, billions: 1e9, bn: 1e9 };
   var SCALE_PAROLA = { mila: 1e3, milione: 1e6, milioni: 1e6, miliardo: 1e9, miliardi: 1e9 };
   // Da sole queste parole non sono numeri ("sei" e' anche un verbo, "un/uno/una" sono articoli).
   var NON_ISOLATE = { sei: 1, uno: 1, un: 1, una: 1 };
@@ -43,7 +51,9 @@
     'solo gia poi dopo prima circa oltre fino entro dal dalla dai dalle dagli suo sua suoi sue ' +
     'loro questo questa questi queste quel quella quelli quelle ogni tutto tutti tutte tutta ' +
     'molto molti molte poco pochi nuovo nuova nuovi nuove euro ' +
-    'all dell nell sull dall coll quell quest anch com dov').split(' '));
+    'all dell nell sull dall coll quell quest anch com dov ' +
+    'the and of to is that for with are was were this from by on as at an be it its not have has had will which their been ' +
+    'our can may would also but or if than then there these those they them you he she his her').split(' '));
   var UNITA_BREVI = new Set('kg mg ml cm mm km db kw mq mc gb mb tb hz lt hl ha mw gw tw'.split(' '));
 
   var FILL = '\u0001';                       // riempimento che spezza i nomi (a differenza dello spazio)
@@ -54,11 +64,14 @@
   var DETERMINANTI = new Set(('il lo la le gli i un una uno l nel nella nei nelle del della dei delle dello degli ' +
     'al alla ai alle allo dal dalla dai dalle sul sulla sui sulle per con da in su tra fra inoltre infine ' +
     'tuttavia secondo durante dopo prima oltre anche ma se quando mentre quindi pertanto invece questo questa ' +
-    'questi queste quel quella presso sotto sopra contro verso come ogni altri altre altro').split(' '));
+    'questi queste quel quella presso sotto sopra contro verso come ogni altri altre altro ' +
+    'the a an in on at of for and but however according while during after before this that these those our their his her its').split(' '));
   // Parole con la maiuscola che non sono nomi quando stanno da sole.
   var NON_NOMI = new Set(('primo prima secondo seconda terzo terza quarto quarta quinto quinta sesto sesta settimo ' +
     'ottavo nono decimo lunedi martedi mercoledi giovedi venerdi sabato domenica gennaio febbraio marzo aprile ' +
-    'maggio giugno luglio agosto settembre ottobre novembre dicembre').split(' '));
+    'maggio giugno luglio agosto settembre ottobre novembre dicembre ' +
+    'first second third fourth fifth monday tuesday wednesday thursday friday saturday sunday ' +
+    'january february march april may june july august september october november december').split(' '));
 
   /* ---------- utilita' di testo ---------- */
 
@@ -101,7 +114,7 @@
   var cacheNumerali = new Map();
   function numerale(t) {                       // "tre", "ventunesimo", "virgola": non descrivono a cosa si riferisce un numero
     var r = cacheNumerali.get(t);
-    if (r === undefined) { r = t === 'virgola' || valoreParola(t) !== null || valoreOrdinale(t) !== null; cacheNumerali.set(t, r); }
+    if (r === undefined) { r = t === 'virgola' || parolaNumeroEn(t) || valoreParola(t) !== null || valoreOrdinale(t) !== null; cacheNumerali.set(t, r); }
     return r;
   }
 
@@ -195,7 +208,10 @@
   function parseNumero(raw) {
     var s = raw.replace(/[    ]/g, '.');
     var cands = [], decimali = 0;
-    if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {            // 1.300  1.300.000  1.300,50
+    if (/^\d{1,3}(?:,\d{3}){2,}(?:\.\d+)?$|^\d{1,3}(?:,\d{3})+\.\d+$/.test(raw)) {   // 1,300,000  1,300.50 (all'inglese, non ambiguo)
+      cands.push(parseFloat(raw.replace(/,/g, '')));
+      decimali = raw.indexOf('.') >= 0 ? raw.split('.')[1].length : 0;
+    } else if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {            // 1.300  1.300.000  1.300,50
       var parteDec = s.indexOf(',') >= 0 ? s.split(',')[1] : '';
       var intero = s.split(',')[0].replace(/\./g, '');
       cands.push(parseFloat(intero + (parteDec ? '.' + parteDec : '')));
@@ -219,8 +235,8 @@
   /* ---------- numeri in lettere ---------- */
 
   function sotto100(s) {                       // 1..99, s senza accenti
-    if (UNITA[s]) return UNITA[s];
-    if (DIECI[s]) return DIECI[s];
+    if (ha(UNITA, s)) return UNITA[s];                // "constructor" non e' un numero
+    if (ha(DIECI, s)) return DIECI[s];
     for (var d in DECINE) {
       if (s === d) return DECINE[d];
       var base = d.slice(0, -1);               // "vent", "trent"...
@@ -354,6 +370,35 @@
       out.push({ tipo: 'data', testo: m[0], inizio: m.index, fine: m.index + m[0].length,
         d: null, m: MESI.indexOf(m[1].toLowerCase()) + 1, y: +m[2] });
     }
+    return out.concat(estraiDateInglesi(testo, out));
+  }
+
+  // "March 14, 2026", "14th of March", "Sept. 3", "March 2026". Il mese vuole la maiuscola ("may" e' anche un verbo).
+  function estraiDateInglesi(testo, gia) {
+    var out = [], m, mascherato = mascheraSpan(testo, gia, FILL);
+    function mese(nome) { return /^\p{Lu}/u.test(nome) ? meseEn(nome) : 0; }
+    var base = '(?<![\\p{L}\\d])';
+    var anno = '(?:,?\\s+(\\d{4})(?![\\d]))?';
+    var re = new RegExp(base + '(' + MESE_EN_RE + ')\\.?\\s+(\\d{1,2})(?:st|nd|rd|th)?(?![\\d\\p{L}])' + anno, 'giu');
+    while ((m = re.exec(mascherato)) !== null) {                       // March 14, 2026
+      var me = mese(m[1]), g = +m[2];
+      if (!me || g < 1 || g > 31) continue;
+      out.push({ tipo: 'data', testo: m[0], inizio: m.index, fine: m.index + m[0].length, d: g, m: me, y: m[3] ? +m[3] : null });
+    }
+    mascherato = mascheraSpan(testo, gia.concat(out), FILL);
+    re = new RegExp(base + '(\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?(' + MESE_EN_RE + ')(?![\\p{L}])\\.?' + anno, 'giu');
+    while ((m = re.exec(mascherato)) !== null) {                       // 14 March 2026, 14th of March
+      var me2 = mese(m[2]), g2 = +m[1];
+      if (!me2 || g2 < 1 || g2 > 31) continue;
+      out.push({ tipo: 'data', testo: m[0], inizio: m.index, fine: m.index + m[0].length, d: g2, m: me2, y: m[3] ? +m[3] : null });
+    }
+    mascherato = mascheraSpan(testo, gia.concat(out), FILL);
+    re = new RegExp(base + '(' + MESE_EN_RE + ')\\.?,?\\s+(?:of\\s+)?(\\d{4})(?![\\d])', 'giu');
+    while ((m = re.exec(mascherato)) !== null) {                       // March 2026
+      var me3 = mese(m[1]);
+      if (!me3) continue;
+      out.push({ tipo: 'data', testo: m[0], inizio: m.index, fine: m.index + m[0].length, d: null, m: me3, y: +m[2] });
+    }
     return out;
   }
 
@@ -381,6 +426,12 @@
       for (var k = 0; k < out.length; k++) if (inizio < out[k].fine && inizio + lunghezza > out[k].inizio) return;
       out.push({ tipo: 'orario', testo: testo.substr(inizio, lunghezza), inizio: inizio, fine: inizio + lunghezza,
         minuti: h * 60 + mi });
+    }
+    re = /(?<![\d:.,\/])(\d{1,2})(?::(\d{2}))?\s?([ap])(?:\.m\.|m)(?![\p{L}\d])/giu;                  // 3:30 pm, 9 AM, 12 a.m.
+    while ((m = re.exec(testo)) !== null) {
+      var h12 = +m[1], pm = m[3].toLowerCase() === 'p';
+      if (h12 < 1 || h12 > 12) continue;
+      aggiungi(m.index, m[0].length, (h12 % 12) + (pm ? 12 : 0), m[2] ? +m[2] : 0);
     }
     re = /(?<![\d:.,\/])(\d{1,2}):(\d{2})(?![\d:])/g;
     while ((m = re.exec(testo)) !== null) aggiungi(m.index, m[0].length, +m[1], +m[2]);
@@ -418,16 +469,17 @@
     else if (/^(n|no|numero|n°)$/.test(p) || p === 'n°') p = 'n';
     else if (/^(d?lgs|dlgs)$/.test(p)) p = 'dlgs';
     else if (/^comm/.test(p)) p = 'comma';
+    else if (/^(?:section|clause|paragraph)s$/.test(p)) p = p.slice(0, -1);
     return p + ':' + numero.toLowerCase().replace(/\s+/g, '');
   }
 
   function estraiRiferimenti(testo) {
-    var re = /(?<![\p{L}])(artt?\.?|articol[oi]|comm[ai]|sentenza|legge|decreto|d\.?\s?lgs\.?|n\.|n°|numero)[ \t]{0,2}(?:n\.?[ \t]{0,2})?(\d+(?:\/\d+)*(?:\s*(?:bis|ter|quater))?)/giu;
+    var re = /(?<![\p{L}])(artt?\.?|articol[oi]|articles?|sections?|clauses?|paragraphs?|comm[ai]|sentenza|legge|decreto|d\.?\s?lgs\.?|n\.|no\.|n°|numero)[ \t]{0,2}(?:n\.?[ \t]{0,2})?(\d+(?:\/\d+)*(?:\s*(?:bis|ter|quater))?)/giu;
     var out = [], m;
     while ((m = re.exec(testo)) !== null) {
       var fine = m.index + m[0].length, chiavi = [chiaveRiferimento(m[1], m[2])];
-      if (/^(art|comm)/i.test(m[1])) {                          // "articoli 32 e 33", "artt. 32-33", "commi 1, 2"
-        var seguito = /^\s*(?:,|e|ed|-|–)\s*(\d+(?:\/\d+)*)(?![\d])/;
+      if (/^(art|comm|section|clause|paragraph)/i.test(m[1])) {  // "articoli 32 e 33", "artt. 32-33", "commi 1, 2", "sections 4 and 5"
+        var seguito = /^\s*(?:,|e|ed|and|-|–)\s*(\d+(?:\/\d+)*)(?![\d])/;
         var s;
         while ((s = seguito.exec(testo.slice(fine))) !== null) {
           chiavi.push(chiaveRiferimento(m[1], s[1]));
@@ -483,7 +535,7 @@
 
   function estraiNumeri(testo, opzioni) {
     var out = [], m;
-    var re = /(?=\d)(?<![\p{L}\p{N}_])(\d{1,3}(?:[.    ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
+    var re = /(?=\d)(?<![\p{L}\p{N}_])(\d{1,3}(?:,\d{3}){2,}(?:\.\d+)?|\d{1,3}(?:,\d{3})+\.\d+|\d{1,3}(?:[.    ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cent[o]?(?![\p{L}])))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld|thousand|millions?|billions?|bn)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
     while ((m = re.exec(testo)) !== null) {
       var inizio = m.index, fine = m.index + m[0].length;
       var dopo = testo.charAt(fine);
@@ -494,11 +546,11 @@
       var scala = m[3] ? SCALE[m[3].toLowerCase()] : 1;
       var tipo = m[2] ? 'percentuale' : 'numero';
       var seguito = testo.slice(fine, fine + 12), prec = testo.slice(Math.max(0, inizio - 2), inizio);
-      if (/^\s*(euro|eur\b|€|dollari|\$)/i.test(seguito) || /[€$]\s*$/.test(prec)) tipo = 'importo';
+      if (/^\s*(euro|eur\b|€|dollari|dollars|pounds|usd\b|gbp\b|\$|£)/i.test(seguito) || /[€$£]\s*$/.test(prec)) tipo = 'importo';
       out.push({ tipo: tipo, testo: m[0], inizio: inizio, fine: fine, cands: p.cands, decimali: p.decimali,
         scala: scala });
     }
-    return out.concat(estraiNumeriInLettere(testo, opzioni));
+    return out.concat(estraiNumeriInLettere(testo, opzioni), estraiNumeriInglesi(testo));
   }
 
   function estraiNumeriInLettere(testo, opzioni) {
@@ -564,7 +616,65 @@
     return out;
   }
 
-  var TITOLI_RE = new RegExp('(?<![\\p{L}])(?:Dott\\.\\s?ssa|Dott\\.|Dottor(?:e|essa)?|Dr\\.\\s?ssa|Dr\\.|Ing\\.|Ingegner[ea]|' +
+  /* Numeri inglesi in lettere: "twenty-one", "one hundred and fifty", "two million", "a hundred", "ten percent".
+     "one" da solo non conta (e' anche un pronome: "no one", "one of the"). */
+  function ha(o, k) { return Object.prototype.hasOwnProperty.call(o, k); }
+  function parolaNumeroEn(w) { return ha(UNITA_EN, w) || ha(DECINE_EN, w) || w === 'hundred' || ha(SCALE_EN, w); }
+  var FRAZIONE_EN = /^(?:thirds?|fourths?|fifths?|sixths?|sevenths?|eighths?|ninths?|tenths?|halves)$/;
+  var ORDINALE_EN = /^(?:first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|eleventh|twelfth|\w+(?:ieth|th))$/;
+
+  function estraiNumeriInglesi(testo) {
+    var out = [], m, parole = [];
+    var reW = /(?<![\p{L}\d])\p{L}+(?![\p{L}\d])/gu;
+    while ((m = reW.exec(testo)) !== null) parole.push({ i: m.index, e: m.index + m[0].length, n: m[0].toLowerCase() });
+    function sep(a) { return a + 1 < parole.length ? testo.slice(parole[a].e, parole[a + 1].i) : null; }
+    function legato(a) { var s = sep(a); return s !== null && /^(?:[ \t]+|-)$/.test(s); }
+    for (var n = 0; n < parole.length; n++) {
+      var w0 = parole[n].n, j = n, cur = 0, total = 0, ultimaScala = Infinity, ultimo = -1, token = 0;
+      if (w0 === 'a' || w0 === 'an') {                                    // "a hundred", "a million": la "a" vale 1
+        var nx = parole[n + 1] && legato(n) ? parole[n + 1].n : '';
+        if (nx !== 'hundred' && nx !== 'thousand' && nx !== 'million' && nx !== 'billion') continue;
+        cur = 1; token = 1; ultimo = n; j = n + 1;
+      } else if (!parolaNumeroEn(w0)) continue;
+      for (; j < parole.length; j++) {
+        var w = parole[j].n, v;
+        if (j > n && !legato(j - 1)) break;
+        if (w === 'and') {                                                // "one hundred and fifty"
+          var prima = parole[j - 1].n, dopoAnd = parole[j + 1];
+          if (j > n && /^[ \t]+$/.test(sep(j - 1)) && (prima === 'hundred' || ha(SCALE_EN, prima)) && dopoAnd &&
+            /^[ \t]+$/.test(sep(j)) && (ha(UNITA_EN, dopoAnd.n) || ha(DECINE_EN, dopoAnd.n))) continue;
+          break;
+        }
+        if (ha(UNITA_EN, w)) {
+          v = UNITA_EN[w];
+          if (cur % 100 === 0 || (v < 10 && cur % 100 >= 20 && cur % 10 === 0)) cur += v; else break;
+        } else if (ha(DECINE_EN, w)) {
+          if (cur % 100 === 0) cur += DECINE_EN[w]; else break;
+        } else if (w === 'hundred') {
+          if (cur > 0 && cur < 100) cur *= 100; else break;
+        } else if (ha(SCALE_EN, w)) {
+          v = SCALE_EN[w];
+          if (cur > 0 && v < ultimaScala) { total += cur * v; cur = 0; ultimaScala = v; } else break;
+        } else break;
+        ultimo = j; token++;
+      }
+      if (ultimo < n || (token === 1 && w0 === 'one')) continue;
+      var valore = total + cur, fine = ultimo;
+      var succ = parole[ultimo + 1];
+      if (succ && legato(ultimo) && (FRAZIONE_EN.test(succ.n) || (/^-$/.test(sep(ultimo)) && ORDINALE_EN.test(succ.n)))) { n = ultimo; continue; }
+      var tipo = 'numero';
+      if (succ && legato(ultimo) && succ.n === 'percent') { tipo = 'percentuale'; fine = ultimo + 1; }
+      else if (succ && legato(ultimo) && succ.n === 'per' && parole[ultimo + 2] && parole[ultimo + 2].n === 'cent' && legato(ultimo + 1)) {
+        tipo = 'percentuale'; fine = ultimo + 2;
+      }
+      out.push({ tipo: tipo, testo: testo.slice(parole[n].i, parole[fine].e), inizio: parole[n].i, fine: parole[fine].e,
+        cands: [valore], decimali: 0, scala: 1, parola: true });
+      n = fine;
+    }
+    return out;
+  }
+
+  var TITOLI_RE = new RegExp('(?<![\\p{L}])(?:Dott\\.\\s?ssa|Dott\\.|Dottor(?:e|essa)?|Dr\\.\\s?ssa|Dr\\.?|Mrs?\\.?|Ms\\.?|Miss|Ing\\.|Ingegner[ea]|' +
     'Avv\\.|Avvocat(?:o|essa)|Geom\\.|Geometra|Sig\\.\\s?r?a|Sig\\.\\s?na|Sig\\.|Signor(?:e|a|ina)?|Prof\\.\\s?ssa|Prof\\.|' +
     'Professor(?:e|essa)?|Arch\\.|Architett[oa]|Rag\\.|On\\.|Onorevole)(?![\\p{L}])', 'gu');
 

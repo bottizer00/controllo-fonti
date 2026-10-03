@@ -25,7 +25,7 @@ Lo strumento nasce da un caso vero: per preparare un esame avevo fatto riassumer
 
 ## Cosa riconosce
 
-- **Numeri**, percentuali e importi in formato italiano e inglese (`1.300`, `1,3`, «1,3 milioni»), scritti in lettere («ventuno», «due milioni ottocentomila», «sei virgola otto») o con unità attaccate (`250,3g`).
+- **Numeri**, percentuali e importi in formato italiano e inglese (`1.300`, `1,3`, «1,3 milioni», in inglese `1,300,000` e «$1.2 million»), scritti in lettere («ventuno», «due milioni ottocentomila», «sei virgola otto») o con unità attaccate (`250,3g`).
 - **Date** in formati diversi (`14/03/2026` = «14 marzo 2026» = «quattordici marzo duemilaventisei»), senza anno (`15/08`) o in elenco («22, 29 gennaio e 5 febbraio»); **orari** (`14.45` = `14:45`, «ore 9», `9-12:30`).
 - **Valori calcolati dall'AI** (una percentuale, un totale, una differenza, una quota): se non sono nella fonte ma tornano con i numeri del testo, lo strumento scrive il calcolo («2.720 × 10% = 272») e avverte quando un numero di partenza non torna: i conti coerenti con un dato sbagliato restano sbagliati. Si cercano solo valori abbastanza precisi, per non trovare calcoli per caso.
 - **Nomi**, sigle e codici (titoli come «Dott.» o «Ing.» e sigle come «CdA» o «SpA» non contano come nomi), **citazioni** tra virgolette cercate parola per parola, **riferimenti** («art. 4», «artt. 32 e 33», «sentenza n. 15/2026»), **telefoni**, email e link.
@@ -72,7 +72,8 @@ Come leggerli, onestamente:
 - Un valore **calcolato** dall'AI (una percentuale, un totale) non è scritto nella fonte e viene segnalato: va ricalcolato a mano.
 - Se la fonte è incompleta, segnala come «non trovato» anche cose vere. Va letto come un invito a controllare, non come un verdetto.
 - I nomi sono riconosciuti con un'euristica sulle maiuscole: può mancare qualcosa o segnalare parole che non sono nomi.
-- Funziona per testi in italiano. Non legge i PDF: copia il testo e incollalo.
+- Pensato per testi in italiano. L'**inglese è supportato nei casi base**: date («March 14, 2026», «14th of March»), numeri in lettere («twenty-one», «one hundred and fifty», «two million»), importi con la virgola delle migliaia («1,300,000»), `3:30 pm`, «Mr.», «Dr.», «Section 4». Provato in locale su dieci voci di Wikipedia in inglese (7.400 elementi, 2.900 frasi: nessuna segnalazione sul testo copiato dalla fonte); non ha un benchmark suo come l'italiano. Le altre lingue non sono supportate.
+- Non legge i PDF: copia il testo e incollalo.
 - Non sostituisce la verifica di una persona competente, in particolare per leggi, conformità e sicurezza.
 
 ## Privacy
@@ -87,7 +88,7 @@ La pagina non contatta nessun server. Lo impone la politica di sicurezza dichiar
 - **Test** (serve Node 20 o successivo, nessuna dipendenza da installare):
 
 ```bash
-npm test            # circa 140 test: logica, esercizi, file Word, link, benchmark, pagine, coerenza, testi casuali
+npm test            # circa 150 test: logica, esercizi, file Word, link, benchmark, pagine, coerenza, testi casuali
 npm run benchmark   # valutazione sul corpus
 npm run e2e         # prova nel browser reale (serve Chrome, Chromium o Edge)
 ```
