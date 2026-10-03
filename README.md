@@ -90,7 +90,7 @@ npm run benchmark   # valutazione sul corpus
 npm run e2e         # prova nel browser reale (serve Chrome, Chromium o Edge)
 ```
 
-La CI esegue tutto, compresa la prova nel browser con Chrome. L'accessibilità è stata verificata anche con axe-core (strumento standard) su ogni scheda, in tema chiaro, scuro e su telefono: nessuna violazione; l'unico titolo fuori ordine che aveva trovato è stato corretto. I controlli di contrasto che axe non può decidere (testo sul fondo sfumato della testata) li ho calcolati a mano: tutti sopra 4,5.
+La CI esegue tutto, compresa la prova nel browser con Chrome. L'accessibilità è stata verificata anche con axe-core (strumento standard) su ogni scheda, in tema chiaro, scuro e su telefono: nessuna violazione; l'unico titolo fuori ordine che aveva trovato è stato corretto. I controlli di contrasto che axe non può decidere (testo sul fondo sfumato della testata) li ho calcolati a mano: tutti sopra 4,5. Lighthouse sulla demo pubblicata: prestazioni 99, accessibilità 100, best practice 100, SEO 91; l'unico audit non superato (`robots.txt`) fallisce soltanto perché Lighthouse lo scarica da dentro la pagina e la politica di sicurezza senza rete glielo impedisce: il file esiste.
 
 ## Struttura
 
