@@ -76,6 +76,17 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     verifica(/«50\.000»/.test(await s.js('document.querySelector(".voce-fonte")?.textContent || ""')), 'testo scritto a mano: propone 50.000');
     verifica(/2\s*verificati\s*0\s*da controllare\s*1\s*non trovati/.test(riga(await s.js('document.getElementById("riepilogo").innerText'))), 'data e orario (9.30 contro 9:30) verificati, solo il budget non torna');
 
+    console.log('# Prompt e lingua');
+    await s.send('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'], origin: new globalThis.URL(base).origin }).catch(() => {});
+    await s.js('document.getElementById("btn-pulisci").click(); document.getElementById("prepara").open = true; document.getElementById("copia-prompt").click()');
+    verifica(/Prima metti il documento/.test(await s.js('document.getElementById("esito-prompt-strumento").textContent')), 'prompt senza documento: messaggio chiaro');
+    await s.js('document.getElementById("fonte").value = "Il budget è di 50.000 euro."; document.getElementById("copia-prompt").click()');
+    await sleep(400);
+    verifica(/Copiato|Copia non riuscita/.test(await s.js('document.getElementById("esito-prompt-strumento").textContent')), 'copia del prompt con il documento: il pulsante risponde');
+    await s.js('document.getElementById("fonte").value = "The revenue of the first quarter was 2.4 million euros, which is an increase compared with the previous year and the budget is not changing."; document.getElementById("ai").value = "The revenue of the first quarter was 3.1 million euros, which is an increase compared with the previous year."; document.getElementById("btn-verifica").click()');
+    await sleep(300);
+    verifica(/inglese/.test(await s.js('document.getElementById("messaggio").textContent')), 'un testo inglese viene segnalato come tale');
+
     console.log('# Caricamento file');
     const docx = path.join(tmp, 'fonte.docx');
     const xml = '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +

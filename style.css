@@ -237,6 +237,22 @@ h2:focus { outline: none; }
 .bottone-link:hover { filter: brightness(1.1); }
 .piede { color: var(--tenue); font-size: .9rem; margin-top: 32px; }
 
+.prepara { margin: 12px 0; background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); }
+.prepara summary { cursor: pointer; font-weight: 700; padding: 11px 16px; color: var(--teal-testo); }
+.prepara-corpo { padding: 0 16px 14px; }
+.riga-prepara { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.esito.errore { color: var(--miss-tx); }
+
+/* i tre stati si distinguono anche senza i colori: pieno, tratteggiato, doppio */
+mark.s-warn { border-bottom-style: dashed; }
+mark.s-miss { border-bottom-style: double; }
+@media (pointer: coarse) {
+  .bandierina { padding: 7px 11px; }
+  .scelta { padding: 5px 6px; }
+  .chip-esempio { padding: 9px 15px; }
+  button.piccolo { padding: 9px 16px; }
+}
+
 @media (prefers-reduced-motion: no-preference) { button { transition: filter .15s, background .15s, border-color .15s; } }
 .nascosto { position: fixed; left: -9999px; top: 0; opacity: 0; }
 [hidden] { display: none !important; }

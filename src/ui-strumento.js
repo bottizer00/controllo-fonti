@@ -74,12 +74,23 @@
     if (!fonte.trim() && !ai.trim()) { UI.messaggio($('messaggio'), 'Incolla il documento originale e il testo dell\'AI, oppure scegli un esempio.', 'errore'); $('fonte').focus(); return; }
     if (!fonte.trim()) { UI.messaggio($('messaggio'), 'Manca il documento originale: senza non c\'è niente con cui confrontare.', 'errore'); $('fonte').focus(); return; }
     if (!ai.trim()) { UI.messaggio($('messaggio'), 'Manca il testo scritto dall\'AI.', 'errore'); $('ai').focus(); return; }
-    var inizio = Date.now(), r = CF.verifica(fonte, ai);
-    corrente = { fonte: fonte, ai: ai, risultato: r };
-    disegna();
-    var ms = Date.now() - inizio;
-    UI.messaggio($('messaggio'), ms > 1500 ? 'Controllo eseguito in ' + (ms / 1000).toFixed(1).replace('.', ',') + ' secondi.' : '');
-    if (senzaScorrere !== true) $('risultato').scrollIntoView({ behavior: UI.riduceMovimento() ? 'auto' : 'smooth', block: 'start' });
+    var esegui = function () {
+      var inizio = Date.now(), r = CF.verifica(fonte, ai);
+      corrente = { fonte: fonte, ai: ai, risultato: r };
+      disegna();
+      var ms = Date.now() - inizio, testo = '';
+      if (CF.rilevaLingua(ai) === 'en' || CF.rilevaLingua(fonte) === 'en') {
+        testo = 'Il testo sembra in inglese: numeri e date si controllano, ma nomi e mesi in inglese sono letti peggio (lo strumento è pensato per l\'italiano).';
+      } else if (ms > 1500) {
+        testo = 'Controllo eseguito in ' + (ms / 1000).toFixed(1).replace('.', ',') + ' secondi.';
+      }
+      UI.messaggio($('messaggio'), testo);
+      if (senzaScorrere !== true) $('risultato').scrollIntoView({ behavior: UI.riduceMovimento() ? 'auto' : 'smooth', block: 'start' });
+    };
+    if (fonte.length + ai.length > 60000) {                       // testi molto lunghi: prima si mostra il messaggio, poi si lavora
+      UI.messaggio($('messaggio'), 'Controllo in corso su un testo lungo…');
+      setTimeout(esegui, 30);
+    } else esegui();
   }
 
   function chip(classe, n, testo) { return '<li class="' + classe + '"><span class="n">' + n + '</span>' + testo + '</li>'; }
@@ -195,6 +206,22 @@
     window.addEventListener('afterprint', fine);
     window.print();
     setTimeout(fine, 1500);
+  });
+
+  /* ---------- prompt per la propria AI ---------- */
+  var PR = window.PromptControlloFonti;
+  PR.PROMPT.filter(function (p) { return p.conDocumento; }).forEach(function (p) {
+    var o = document.createElement('option');
+    o.value = p.id; o.textContent = p.titolo;
+    $('scelta-prompt').appendChild(o);
+  });
+  $('copia-prompt').addEventListener('click', function () {
+    var p = PR.PROMPT.filter(function (x) { return x.id === $('scelta-prompt').value; })[0], esito = $('esito-prompt-strumento');
+    if (!$('fonte').value.trim()) { esito.textContent = 'Prima metti il documento nella casella 1.'; esito.className = 'esito errore'; $('fonte').focus(); return; }
+    UI.copia(PR.componi(p, $('fonte').value)).then(function (ok) {
+      esito.className = 'esito' + (ok ? '' : ' errore');
+      esito.textContent = ok ? 'Copiato: incollalo nella tua AI, poi porta qui la risposta.' : 'Copia non riuscita.';
+    });
   });
 
   /* Per l'esercizio: "Apri nello strumento". */
