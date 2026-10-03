@@ -17,14 +17,17 @@
     'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
   var MESE_RE = MESI.join('|');
 
-  var PAROLE_NUMERO = {
-    due: 2, tre: 3, quattro: 4, cinque: 5, sette: 7, otto: 8, nove: 9, dieci: 10,
-    undici: 11, dodici: 12, tredici: 13, quattordici: 14, quindici: 15, sedici: 16,
-    diciassette: 17, diciotto: 18, diciannove: 19, venti: 20, trenta: 30, quaranta: 40,
-    cinquanta: 50, sessanta: 60, settanta: 70, ottanta: 80, novanta: 90, cento: 100
-  };
+  // Numeri in lettere: "tre", "ventuno", "centottanta", "duemilacinquecento", "dodici mila", "un milione".
+  var UNITA = { uno: 1, un: 1, due: 2, tre: 3, quattro: 4, cinque: 5, sei: 6, sette: 7, otto: 8, nove: 9 };
+  var DIECI = { dieci: 10, undici: 11, dodici: 12, tredici: 13, quattordici: 14, quindici: 15, sedici: 16,
+    diciassette: 17, diciotto: 18, diciannove: 19 };
+  var DECINE = { venti: 20, trenta: 30, quaranta: 40, cinquanta: 50, sessanta: 60, settanta: 70, ottanta: 80,
+    novanta: 90 };
   var SCALE = { mila: 1e3, mille: 1e3, milione: 1e6, milioni: 1e6, miliardo: 1e9,
     miliardi: 1e9, mln: 1e6, mld: 1e9 };
+  var SCALE_PAROLA = { mila: 1e3, milione: 1e6, milioni: 1e6, miliardo: 1e9, miliardi: 1e9 };
+  // Da sole queste parole non sono numeri ("sei" e' anche un verbo, "un/uno/una" sono articoli).
+  var NON_ISOLATE = { sei: 1, uno: 1, un: 1, una: 1 };
 
   var STOP = new Set(('il lo la i gli le un uno una di a da in con su per tra fra e ed o ma che ' +
     'sono del della dei delle dello degli al alla ai alle allo nel nella nei nelle sul sulla ' +
@@ -222,10 +225,83 @@
       out.push({ tipo: tipo, testo: m[0], inizio: inizio, fine: fine, cands: p.cands, decimali: p.decimali,
         scala: scala });
     }
-    var reP = new RegExp('(?<![\\p{L}])(' + Object.keys(PAROLE_NUMERO).join('|') + ')(?![\\p{L}-])', 'giu');
-    while ((m = reP.exec(testo)) !== null) {
-      out.push({ tipo: 'numero', testo: m[0], inizio: m.index, fine: m.index + m[0].length,
-        cands: [PAROLE_NUMERO[m[1].toLowerCase()]], decimali: 0, scala: 1, parola: true });
+    return out.concat(estraiNumeriInLettere(testo));
+  }
+
+  /* ---- numeri in lettere ---- */
+
+  function sotto100(s) {                       // 1..99, s senza accenti
+    if (UNITA[s]) return UNITA[s];
+    if (DIECI[s]) return DIECI[s];
+    for (var d in DECINE) {
+      if (s === d) return DECINE[d];
+      var base = d.slice(0, -1);               // "vent", "trent"...
+      if (s.indexOf(base) !== 0) continue;
+      var resto = s.slice(base.length);
+      if (resto === 'uno' || resto === 'un' || resto === 'otto') return DECINE[d] + UNITA[resto];   // ventuno, ventotto
+      if (resto.charAt(0) === d.slice(-1) && UNITA[resto.slice(1)]) return DECINE[d] + UNITA[resto.slice(1)];   // ventitre
+    }
+    return null;
+  }
+
+  function sotto1000(s) {                      // 1..999
+    if (!s) return null;
+    s = s.replace(/cent(?=ott)/, 'cento');     // centottanta = cento + ottanta
+    var i = s.indexOf('cento'), centinaia = 0;
+    if (i >= 0) {
+      var testa = s.slice(0, i);
+      if (testa === '') centinaia = 1;
+      else if (UNITA[testa] >= 2) centinaia = UNITA[testa];
+      else return null;
+      s = s.slice(i + 5);
+      if (!s) return centinaia * 100;
+    }
+    var r = sotto100(s);
+    return r === null ? null : centinaia * 100 + r;
+  }
+
+  // Valore di una parola scritta in lettere (fino a 999.999), oppure null.
+  function valoreParola(w) {
+    w = normalizza(w);
+    if (w.length < 3 || w.length > 40 || !/^[a-z]+$/.test(w)) return null;
+    if (w.indexOf('mille') === 0) {
+      var coda = w.slice(5);
+      var r = coda ? sotto1000(coda) : 0;
+      return r === null ? null : 1000 + r;
+    }
+    var k = w.indexOf('mila');
+    if (k > 0) {
+      var migliaia = sotto1000(w.slice(0, k));
+      if (migliaia === null || migliaia < 2) return null;
+      var resto = w.slice(k + 4), r2 = resto ? sotto1000(resto) : 0;
+      return r2 === null ? null : migliaia * 1000 + r2;
+    }
+    return sotto1000(w);
+  }
+
+  function estraiNumeriInLettere(testo) {
+    var out = [], m;
+    var reW = /(?<![\p{L}\d])\p{L}+(?![\p{L}\d])/gu, parole = [];
+    while ((m = reW.exec(testo)) !== null) parole.push({ t: m[0], i: m.index, e: m.index + m[0].length });
+    for (var n = 0; n < parole.length; n++) {
+      var p = parole[n], v, scalaTesto = null, fine = p.e, lw = normalizza(p.t);
+      if ((lw === 'un' || lw === 'uno') && n + 1 < parole.length) {                    // "un milione"
+        var prossima = normalizza(parole[n + 1].t);
+        if ((prossima === 'milione' || prossima === 'miliardo') && /^\s+$/.test(testo.slice(p.e, parole[n + 1].i))) {
+          out.push({ tipo: 'numero', testo: testo.slice(p.i, parole[n + 1].e), inizio: p.i, fine: parole[n + 1].e,
+            cands: [1], decimali: 0, scala: SCALE_PAROLA[prossima], parola: true });
+          n++; continue;
+        }
+      }
+      v = NON_ISOLATE[lw] ? null : valoreParola(p.t);
+      if (v === null || SCALE_PAROLA[lw]) continue;
+      if (n + 1 < parole.length && /^[ \t]+$/.test(testo.slice(p.e, parole[n + 1].i))) {
+        var prox = normalizza(parole[n + 1].t);
+        if (SCALE_PAROLA[prox] && v < 1000 && !(prox === 'mila' && v < 2)) { scalaTesto = SCALE_PAROLA[prox]; fine = parole[n + 1].e; }
+      }
+      out.push({ tipo: 'numero', testo: testo.slice(p.i, fine), inizio: p.i, fine: fine, cands: [v], decimali: 0,
+        scala: scalaTesto || 1, parola: true });
+      if (scalaTesto) n++;
     }
     return out;
   }
