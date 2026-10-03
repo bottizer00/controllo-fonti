@@ -54,7 +54,16 @@ async function sessione(porta, url) {
   await send('Page.enable'); await send('Runtime.enable'); await send('Log.enable'); await send('DOM.enable');
   return {
     log, send,
-    async vai(u) { await send('Page.navigate', { url: u }); await sleep(900); },
+    async vai(u) {
+      await send('Page.navigate', { url: u });
+      await sleep(250);
+      for (let i = 0; i < 100; i++) {                                    // aspetta che la pagina sia caricata (serve sulla rete)
+        const r = await send('Runtime.evaluate', { expression: 'document.readyState === "complete"', returnByValue: true });
+        if (r.result && r.result.result && r.result.result.value === true) break;
+        await sleep(100);
+      }
+      await sleep(350);
+    },
     async js(expr) {
       const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
       if (r.result.exceptionDetails) throw new Error('Errore nella pagina: ' + (r.result.exceptionDetails.exception?.description || r.result.exceptionDetails.text));

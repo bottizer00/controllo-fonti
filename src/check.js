@@ -990,6 +990,19 @@
       citazione: 'citazione' }[tipo] || tipo;
   }
 
+  /* Lingua prevalente di un testo, dalle parole piu' comuni: 'it', 'en' o 'incerta' (testo corto o misto). */
+  var PAROLE_IT = new Set('il lo la le gli di del della dei delle che e ed un una con per non sono nel nella alla alle anche piu ha hanno come questo questa si al dal dalla fra tra'.split(' '));
+  var PAROLE_EN = new Set('the and of to is that for with are was this from by on as at an be it not have has will which their been'.split(' '));
+
+  function rilevaLingua(testo) {
+    var parole = normalizza(testo).match(/\p{L}+/gu) || [];
+    if (parole.length < 12) return 'incerta';
+    var it = 0, en = 0;
+    parole.forEach(function (w) { if (PAROLE_IT.has(w)) it++; if (PAROLE_EN.has(w)) en++; });
+    if (en >= 5 && en > it * 1.5) return 'en';
+    return it >= 3 && it >= en ? 'it' : 'incerta';
+  }
+
   /* Verifica un testo AI contro la fonte. */
   function verifica(fonte, testoAI) {
     fonte = String(fonte || ''); testoAI = String(testoAI || '');
@@ -1088,5 +1101,5 @@
   }
 
   return { verifica: verifica, estrai: estrai, evidenzia: evidenzia, evidenziaFonte: evidenziaFonte,
-    contestoItem: contestoItem, rapporto: rapporto, parseNumero: parseNumero, normalizza: normalizza };
+    contestoItem: contestoItem, rapporto: rapporto, rilevaLingua: rilevaLingua, parseNumero: parseNumero, normalizza: normalizza };
 });

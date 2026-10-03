@@ -4,6 +4,7 @@
  *
  *   npm run e2e                       (serve Chrome, Chromium o Edge; altrimenti imposta CHROME_PATH)
  *   node e2e/run.js --screenshot dir  (salva anche gli screenshot nella cartella indicata)
+ *   node e2e/run.js --url https://...  (prova una pagina gia' pubblicata invece di quella locale)
  */
 'use strict';
 const http = require('node:http');
@@ -44,8 +45,9 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
 })()`;
 
 (async () => {
-  const srv = await server();
-  const base = 'http://127.0.0.1:' + srv.address().port + '/';
+  const urlArg = process.argv.includes('--url') ? process.argv[process.argv.indexOf('--url') + 1] : null;     // prova una pagina gia' pubblicata
+  const srv = urlArg ? null : await server();
+  const base = urlArg ? urlArg.replace(/\/?$/, '/') : 'http://127.0.0.1:' + srv.address().port + '/';
   const URL = base + 'index.html';
   const { proc, porta } = await avviaBrowser();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cf-file-'));
@@ -160,7 +162,7 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     verifica(s.log.length === 0, 'nessun errore o avviso nella console del browser');
     s.chiudi();
   } finally {
-    proc.kill(); srv.close();
+    proc.kill(); if (srv) srv.close();
     fs.rmSync(tmp, { recursive: true, force: true });
   }
   console.log('\n' + passati + ' controlli superati, ' + falliti + ' falliti');
