@@ -464,7 +464,7 @@
 
   function estraiNumeri(testo, opzioni) {
     var out = [], m;
-    var re = /(?<![\p{L}\p{N}_])(\d{1,3}(?:[.  ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
+    var re = /(?=\d)(?<![\p{L}\p{N}_])(\d{1,3}(?:[.  ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
     while ((m = re.exec(testo)) !== null) {
       var inizio = m.index, fine = m.index + m[0].length;
       var dopo = testo.charAt(fine);
@@ -632,7 +632,7 @@
     var idx = { testo: testo, norm: norm, allineato: norm.length === testo.length, tokens: tokens,
       numeri: [], date: [], orari: new Map(), orariLista: [], rif: new Map(), contatti: new Map(), telefoni: new Map(),
       nomi: [], nomiParole: new Set(), parolePos: new Map(), perValore: new Map(), perStem: new Map(),
-      arrotInteri: null, cacheArrot: {}, cacheNomi: {}, cacheFrasi: {}, trigrammi: null };
+      arrotInteri: null, cacheArrot: {}, cacheNomi: {}, cacheFrasi: {}, trigrammi: null, budgetSuggerimenti: 600 };
     idx.normSpazi = ' ' + norm.replace(/[^\p{L}\p{N}]+/gu, ' ') + ' ';
     tokens.forEach(function (tk, k) {
       if (tk.num) return;
@@ -743,9 +743,13 @@
   // La voce della fonte piu' vicina, per contesto, a quello del testo AI. `ammesso` esclude le voci non plausibili:
   // una correzione sbagliata e' peggio di nessuna correzione.
   function suggerisci(idx, fam, ctxAI, ammesso, punteggio, minimo) {
+    if (idx.budgetSuggerimenti <= 0) return null;                  // su testi enormi le correzioni si calcolano solo per i primi casi
+    idx.budgetSuggerimenti--;
     var punti = new Map();
     ctxAI.forEach(function (st) {
-      (idx.perStem.get(st) || []).forEach(function (v) {
+      var lista = idx.perStem.get(st) || [];
+      if (lista.length > 400) return;                                // una parola ovunque non indica nessun punto preciso
+      lista.forEach(function (v) {
         if (v.fam !== fam || (ammesso && !ammesso(v))) return;
         punti.set(v, (punti.get(v) || 0) + 1);
       });
@@ -1032,7 +1036,7 @@
     var html = '', pos = 0;
     items.forEach(function (it, n) {
       html += escapeHtml(testoAI.slice(pos, it.inizio));
-      html += '<mark class="s-' + it.stato + '" data-i="' + n + '" tabindex="0" title="' +
+      html += '<mark class="s-' + it.stato + '" data-i="' + n + '" tabindex="0" role="button" title="' +
         escapeHtml(it.etichetta + ': ' + it.motivo) + '">' + escapeHtml(testoAI.slice(it.inizio, it.fine)) + '</mark>';
       pos = it.fine;
     });

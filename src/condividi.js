@@ -66,10 +66,11 @@
     return Promise.resolve().then(function () {
       testo = String(testo || '').replace(/^#?e=/, '');
       if (!/^[pz][A-Za-z0-9_-]+$/.test(testo)) throw new Error('Il link non contiene un esercizio.');
-      var bytes = daBase64Url(testo.slice(1));
+      var bytes;
+      try { bytes = daBase64Url(testo.slice(1)); } catch (e) { throw new Error('Il link è danneggiato o incompleto.'); }
       if (testo.charAt(0) === 'p') return bytes;
       if (!haCompressione()) throw new Error('Questo browser non sa aprire il link.');
-      return trasforma(bytes, new DecompressionStream('deflate-raw'));
+      return trasforma(bytes, new DecompressionStream('deflate-raw')).catch(function () { throw new Error('Il link è danneggiato o incompleto.'); });
     }).then(function (bytes) {
       var o;
       try { o = JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { throw new Error('Il link non contiene un esercizio.'); }

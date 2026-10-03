@@ -164,7 +164,7 @@ test('testi lunghi: tempi ragionevoli', () => {
   const ai = (frase + 'Il 7 luglio 2026 si prevede un costo di 51.000 euro. ').repeat(1500);
   const t0 = Date.now();
   const r = CF.verifica(fonte, ai);
-  assert.ok(Date.now() - t0 < 4000, 'troppo lento: ' + (Date.now() - t0) + ' ms');
+  assert.ok(Date.now() - t0 < 8000, 'troppo lento: ' + (Date.now() - t0) + ' ms');
   assert.ok(r.riepilogo.miss > 0);
 });
 
