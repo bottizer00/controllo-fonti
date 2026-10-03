@@ -403,7 +403,7 @@
   }
 
   function estraiRiferimenti(testo) {
-    var re = /(?<![\p{L}])(artt?\.?|articol[oi]|comm[ai]|sentenza|legge|decreto|d\.?\s?lgs\.?|n\.|n°|numero)\s*(?:n\.?\s*)?(\d+(?:\/\d+)*(?:\s*(?:bis|ter|quater))?)/giu;
+    var re = /(?<![\p{L}])(artt?\.?|articol[oi]|comm[ai]|sentenza|legge|decreto|d\.?\s?lgs\.?|n\.|n°|numero)[ \t]{0,2}(?:n\.?[ \t]{0,2})?(\d+(?:\/\d+)*(?:\s*(?:bis|ter|quater))?)/giu;
     var out = [], m;
     while ((m = re.exec(testo)) !== null) {
       var fine = m.index + m[0].length, chiavi = [chiaveRiferimento(m[1], m[2])];
@@ -598,7 +598,7 @@
   function estrai(testo, opzioni) {
     testo = String(testo || '');
     var tutti = [];
-    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti), opzioni)); }
+    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti, FILL), opzioni)); }     // FILL: nessuna espressione lo attraversa
     if (!(opzioni && opzioni.senzaCitazioni)) passo(estraiCitazioni);
     passo(estraiDate);
     passo(estraiOrari);
@@ -614,7 +614,7 @@
     tutti.sort(function (a, b) { return a.inizio - b.inizio || b.fine - a.fine; });
     var puliti = [], ultimaFine = -1;
     tutti.forEach(function (x) {
-      if (x.inizio >= ultimaFine) { puliti.push(x); ultimaFine = x.fine; }
+      if (x.inizio >= ultimaFine) { x.testo = testo.slice(x.inizio, x.fine); puliti.push(x); ultimaFine = x.fine; }     // il testo e' sempre quello vero, mai quello mascherato
     });
     return puliti;
   }

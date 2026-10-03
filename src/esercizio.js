@@ -13,7 +13,7 @@
 })(typeof self !== 'undefined' ? self : this, function (CF) {
   'use strict';
 
-  var ABBREVIAZIONI = new Set('ing dott dr sig avv prof arch geom rag art artt n tel ecc es cfr pag ca vs on'.split(' '));
+  var ABBREVIAZIONI = new Set('ing dott dr sig avv prof arch geom rag art artt n tel ecc es cfr pag ca vs on lgs dlgs dpr dpcm dl lett par sez cap ss seg cod'.split(' '));
 
   /* Le frasi del testo, come intervalli [inizio, fine). Non spezza dopo "ing.", "art.", "n.", "S.r.l.". */
   function frasi(testo) {
