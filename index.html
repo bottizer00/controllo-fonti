@@ -53,12 +53,6 @@
 
   <!-- STRUMENTO -->
   <section id="p-strumento" role="tabpanel" aria-labelledby="t-strumento">
-    <ol class="passi" aria-label="Come si usa">
-      <li><span class="num">1</span>Incolla (o carica) il documento originale</li>
-      <li><span class="num">2</span>Incolla il testo scritto dall'AI</li>
-      <li><span class="num">3</span>Leggi cosa non torna e controlla nella fonte</li>
-    </ol>
-
     <div class="barra">
       <span class="etichetta-barra" id="et-esempi">Parti da un esempio</span>
       <div id="esempi-rapidi" class="esempi" role="group" aria-labelledby="et-esempi"></div>
@@ -68,21 +62,25 @@
       <div class="campo" id="campo-fonte">
         <div class="campo-testa">
           <label for="fonte">1. Documento originale (la fonte)</label>
-          <span class="contatore" id="cont-fonte"></span>
+        </div>
+        <textarea id="fonte" rows="6" spellcheck="false" placeholder="Incolla qui il testo originale, oppure trascina un file…"></textarea>
+        <div class="campo-piede">
           <button type="button" class="link" id="carica-fonte">Carica un file</button>
           <button type="button" class="link" id="pulisci-fonte" title="Toglie i trattini a fine riga e le righe spezzate dei testi copiati da un PDF">Sistema da PDF</button>
+          <span class="contatore" id="cont-fonte"></span>
         </div>
-        <textarea id="fonte" rows="12" spellcheck="false" placeholder="Incolla qui il testo originale, oppure trascina un file…"></textarea>
         <input type="file" id="file-fonte" hidden accept=".txt,.md,.csv,.json,.docx,text/plain">
       </div>
       <div class="campo" id="campo-ai">
         <div class="campo-testa">
           <label for="ai">2. Testo scritto dall'AI</label>
-          <span class="contatore" id="cont-ai"></span>
+        </div>
+        <textarea id="ai" rows="6" spellcheck="false" placeholder="Incolla qui il riassunto o la risposta dell'AI, oppure trascina un file…"></textarea>
+        <div class="campo-piede">
           <button type="button" class="link" id="carica-ai">Carica un file</button>
           <button type="button" class="link" id="pulisci-ai" title="Toglie i trattini a fine riga e le righe spezzate dei testi copiati da un PDF">Sistema da PDF</button>
+          <span class="contatore" id="cont-ai"></span>
         </div>
-        <textarea id="ai" rows="12" spellcheck="false" placeholder="Incolla qui il riassunto o la risposta dell'AI, oppure trascina un file…"></textarea>
         <input type="file" id="file-ai" hidden accept=".txt,.md,.csv,.json,.docx,text/plain">
       </div>
     </div>
@@ -93,20 +91,8 @@
       <span class="suggerimento-tasti">oppure Ctrl+Invio</span>
       <span id="messaggio" class="messaggio" role="status" aria-live="polite"></span>
     </div>
-    <p class="aiuto-file">File accettati: .txt, .md, .csv, .json e Word (.docx). Per un PDF apri il documento, copia il testo, incollalo nella casella e premi «Sistema da PDF» (toglie i trattini a fine riga e le righe spezzate).</p>
+    <p class="aiuto-file">File: .txt, .md, .csv, .json, Word (.docx). Da un PDF: copia il testo, incollalo e premi «Sistema da PDF».</p>
 
-    <details class="prepara" id="prepara">
-      <summary>Non hai ancora il testo dell'AI? Prepara un prompt che rende il controllo più facile</summary>
-      <div class="prepara-corpo">
-        <p>Metti il documento nella casella 1, scegli il prompt e copialo: il documento è già dentro. Incollalo nella tua AI (ChatGPT, Copilot, Gemini…), poi copia la sua risposta nella casella 2 e premi «Verifica». Chiedere di citare le frasi riduce gli errori ma non li elimina: per questo si controlla.</p>
-        <div class="riga-prepara">
-          <label for="scelta-prompt">Prompt</label>
-          <select id="scelta-prompt"></select>
-          <button type="button" id="copia-prompt" class="secondario piccolo">Copia prompt e documento</button>
-          <span id="esito-prompt-strumento" class="esito" role="status"></span>
-        </div>
-      </div>
-    </details>
 
     <div id="risultato" class="risultato" hidden>
       <div class="risultato-testa">
@@ -137,6 +123,19 @@
       <h3 id="titolo-elenco" class="titolo-elenco">Da controllare</h3>
       <div id="elenco" class="elenco"></div>
     </div>
+
+    <details class="prepara" id="prepara">
+      <summary>Non hai ancora il testo dell'AI? Prepara un prompt che rende il controllo più facile</summary>
+      <div class="prepara-corpo">
+        <p>Metti il documento nella casella 1, scegli il prompt e copialo: il documento è già dentro. Incollalo nella tua AI (ChatGPT, Copilot, Gemini…), poi copia la sua risposta nella casella 2 e premi «Verifica». Chiedere di citare le frasi riduce gli errori ma non li elimina: per questo si controlla.</p>
+        <div class="riga-prepara">
+          <label for="scelta-prompt">Prompt</label>
+          <select id="scelta-prompt"></select>
+          <button type="button" id="copia-prompt" class="secondario piccolo">Copia prompt e documento</button>
+          <span id="esito-prompt-strumento" class="esito" role="status"></span>
+        </div>
+      </div>
+    </details>
 
     <p class="limiti"><strong>Limite importante:</strong> lo strumento controlla solo la coerenza di numeri, date, nomi e citazioni con la fonte. Non capisce il significato: un testo può essere sbagliato (una frase ribaltata, un «non» sparito) anche con tutti i dettagli giusti. Serve come primo filtro, non come garanzia. Prova l'esercizio per vedere esempi di errori che nessuno strumento automatico trova.</p>
   </section>

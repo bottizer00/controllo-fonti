@@ -34,9 +34,9 @@ body { margin: 0; background: var(--sfondo); color: var(--testo);
 .salta:focus { top: 8px; }
 
 /* ---------- testata ---------- */
-.testata { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; padding: 34px 0 26px; }
-.testata h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: .3px; line-height: 1.15; }
-.sottotitolo { margin: 0 0 16px; color: #dbe5ef; max-width: 66ch; font-size: 1.06rem; }
+.testata { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; padding: 18px 0 14px; }
+.testata h1 { margin: 0 0 4px; font-size: clamp(1.6rem, 3.4vw, 2.1rem); letter-spacing: .3px; line-height: 1.15; }
+.sottotitolo { margin: 0 0 10px; color: #dbe5ef; max-width: 92ch; font-size: 1rem; line-height: 1.45; }
 .garanzie-riga { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .zoom { display: inline-flex; align-items: center; gap: 6px; color: #c9d7e4; font-size: .85rem; font-weight: 600; }
 .zoom button { font: inherit; font-weight: 800; color: #fff; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35); border-radius: 8px;
@@ -48,7 +48,7 @@ body { margin: 0; background: var(--sfondo); color: var(--testo);
 
 /* ---------- schede ---------- */
 main { padding-bottom: 56px; }
-.schede { display: flex; gap: 2px; margin: 18px 0 20px; border-bottom: 2px solid var(--bordo); flex-wrap: wrap; }
+.schede { display: flex; gap: 2px; margin: 12px 0 12px; border-bottom: 2px solid var(--bordo); flex-wrap: wrap; }
 .scheda { appearance: none; background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -2px;
   padding: 11px 15px; font: inherit; font-weight: 600; color: var(--tenue); cursor: pointer; border-radius: 8px 8px 0 0; }
 .scheda:hover { color: var(--testo); background: rgba(13, 122, 124, .07); }
@@ -67,18 +67,18 @@ a { color: var(--teal-testo); }
 code { background: var(--carta); border: 1px solid var(--bordo); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
 
 /* ---------- passi e barra esempi ---------- */
-.passi { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; margin: 0 0 18px; }
+.passi { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; margin: 0 0 10px; }
 .passi li { display: flex; align-items: center; gap: 10px; background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio);
-  padding: 10px 14px; font-size: .94rem; line-height: 1.35; }
-.num { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 800;
+  padding: 6px 12px; font-size: .88rem; line-height: 1.3; }
+.num { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--teal); color: #fff; font-weight: 800;
   display: inline-flex; align-items: center; justify-content: center; font-size: .9rem; }
 @media (max-width: 760px) { .passi { grid-template-columns: 1fr; } }
 
-.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 14px; }
+.barra { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-bottom: 10px; }
 .etichetta-barra { font-weight: 700; font-size: .93rem; }
 .spazio { flex: 1 1 20px; }
 .esempi { display: flex; flex-wrap: wrap; gap: 7px; }
-.chip-esempio { font: inherit; font-size: .88rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: var(--carta);
+.chip-esempio { font: inherit; font-size: .84rem; font-weight: 600; padding: 3px 11px; border-radius: 999px; background: var(--carta);
   border: 1px solid var(--bordo-forte); color: var(--testo); cursor: pointer; }
 .chip-esempio:hover { border-color: var(--teal); color: var(--teal-testo); }
 .chip-esempio[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
@@ -90,15 +90,17 @@ input[type="text"] { width: 100%; }
 .colonne { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 760px) { .colonne { grid-template-columns: 1fr; } }
 .campo { min-width: 0; }
-.campo-testa { display: flex; align-items: baseline; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
+.campo-testa { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+.campo-piede { display: flex; align-items: baseline; gap: 14px; margin-top: 3px; flex-wrap: wrap; }
+.campo-piede .contatore { margin-left: auto; white-space: nowrap; }
 .campo > label, .campo-testa label { font-weight: 700; }
 .contatore { color: var(--tenue); font-size: .82rem; margin-left: auto; }
 .link { font: inherit; font-size: .88rem; font-weight: 600; background: none; border: 0; color: var(--teal-testo); text-decoration: underline;
   cursor: pointer; padding: 2px 4px; }
 textarea { width: 100%; font: .95rem/1.55 system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 11px 13px;
-  border: 1px solid var(--bordo-forte); border-radius: 10px; background: var(--carta); color: var(--testo); resize: vertical; min-height: 150px; }
+  border: 1px solid var(--bordo-forte); border-radius: 10px; background: var(--carta); color: var(--testo); resize: vertical; min-height: 104px; }
 textarea.trascina { border-color: var(--teal); background: var(--info-bg); }
-.comandi { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0 6px; }
+.comandi { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 10px 0 4px; }
 .suggerimento-tasti { color: var(--tenue); font-size: .84rem; }
 .messaggio { font-size: .92rem; font-weight: 600; }
 .messaggio.errore { color: var(--miss-tx); }
@@ -117,7 +119,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .risultato { margin-top: 22px; background: var(--carta); border: 1px solid var(--bordo); border-radius: var(--raggio); padding: 6px 20px 20px;
   box-shadow: var(--ombra); }
 .risultato-testa { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.risultato h2 { margin: 16px 0 6px; }
+.risultato h2 { margin: 10px 0 4px; }
 .azioni { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .esito { color: var(--ok-tx); font-weight: 600; font-size: .9rem; }
 .barra-esito { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--bordo); margin: 6px 0 12px; }

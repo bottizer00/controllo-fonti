@@ -53,7 +53,7 @@
     var box = $('esempi-rapidi');
     ESEMPI.forEach(function (e) {
       var b = document.createElement('button');
-      b.type = 'button'; b.className = 'chip-esempio'; b.textContent = e.titolo;
+      b.type = 'button'; b.className = 'chip-esempio'; b.textContent = e.breve || e.titolo; b.title = e.titolo;
       b.setAttribute('aria-pressed', 'false'); b.setAttribute('data-id', e.id);
       b.addEventListener('click', function () { caricaEsempio(e); });
       box.appendChild(b);

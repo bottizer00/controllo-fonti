@@ -19,6 +19,7 @@
   return [
     {
       id: 'verbale',
+      breve: 'Verbale',
       titolo: 'Verbale di riunione',
       livello: 'facile',
       descrizione: 'Un riassunto di un verbale commerciale. Cerca gli errori prima di rivelarli.',
@@ -46,6 +47,7 @@
     },
     {
       id: 'scheda',
+      breve: 'Scheda prodotto',
       titolo: 'Scheda di un prodotto',
       livello: 'facile',
       descrizione: 'Un testo commerciale generato da una scheda tecnica. Quali dettagli sono stati inventati?',
@@ -66,6 +68,7 @@
     },
     {
       id: 'preventivo',
+      breve: 'Preventivo',
       titolo: 'Preventivo di un fornitore',
       livello: 'medio',
       descrizione: 'I conti sembrano tornare. Ma tornano a partire da dati giusti?',
@@ -97,6 +100,7 @@
     },
     {
       id: 'circolare',
+      breve: 'Circolare',
       titolo: 'Circolare del personale',
       livello: 'medio',
       descrizione: 'Alcune frasi hanno il significato ribaltato, anche se numeri e nomi sono giusti. Segna anche le frasi, con la bandierina.',
@@ -127,6 +131,7 @@
     },
     {
       id: 'test',
+      breve: 'Scheda di un test',
       titolo: 'La scheda di un test',
       livello: 'medio',
       descrizione: 'Ispirato a un caso vero: un riassunto AI con numeri sbagliati che sembravano credibili.',
@@ -150,6 +155,7 @@
     },
     {
       id: 'cv',
+      breve: 'Curriculum',
       titolo: 'Riassunto di un curriculum',
       livello: 'medio',
       descrizione: 'Un\'AI ha riassunto il CV di una candidata. In selezione un errore del genere può costare una persona.',
@@ -176,6 +182,7 @@
     },
     {
       id: 'contratto',
+      breve: 'Contratto',
       titolo: 'Clausole di un contratto',
       livello: 'difficile',
       descrizione: 'Un\'AI cita un contratto tra virgolette. Le virgolette garantiscono che la citazione sia vera?',
@@ -203,6 +210,7 @@
     },
     {
       id: 'offerta',
+      breve: 'Offerta di lavoro',
       titolo: 'Offerta di lavoro',
       livello: 'difficile',
       descrizione: 'Un\'offerta riassunta dall\'AI per un annuncio. Sette dettagli sono cambiati: quanti ne trovi?',
