@@ -26,7 +26,7 @@
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--sfondo); color: var(--testo);
-  font: 16px/1.6 system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  font: 1rem/1.6 system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 .contenitore { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .sr-solo { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .salta { position: absolute; left: 8px; top: -60px; background: var(--carta); color: var(--testo); padding: 8px 14px;
@@ -37,6 +37,12 @@ body { margin: 0; background: var(--sfondo); color: var(--testo);
 .testata { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%); color: #fff; padding: 34px 0 26px; }
 .testata h1 { margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: .3px; line-height: 1.15; }
 .sottotitolo { margin: 0 0 16px; color: #dbe5ef; max-width: 66ch; font-size: 1.06rem; }
+.garanzie-riga { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.zoom { display: inline-flex; align-items: center; gap: 6px; color: #c9d7e4; font-size: .85rem; font-weight: 600; }
+.zoom button { font: inherit; font-weight: 800; color: #fff; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .35); border-radius: 8px;
+  padding: 3px 11px; cursor: pointer; }
+.zoom button:hover:not(:disabled) { background: rgba(255, 255, 255, .24); }
+.zoom button:disabled { opacity: .4; cursor: not-allowed; }
 .garanzie { list-style: none; display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 0; margin: 0; }
 .garanzie li { display: inline-flex; align-items: center; gap: 7px; color: var(--teal-chiaro); font-size: .92rem; font-weight: 600; }
 
@@ -274,7 +280,7 @@ mark.s-miss { border-bottom-style: double; }
 .area-stampa { display: none; }
 @media print {
   body { background: #fff; color: #000; font-size: 11pt; }
-  body:not(.pagina-guida) .testata, .schede, .salta, .passi, .barra, .colonne, .comandi, .aiuto-file, .limiti, .azioni, .stampa-comandi, .crea,
+  body:not(.pagina-guida) .testata, .zoom, .schede, .salta, .passi, .barra, .colonne, .comandi, .aiuto-file, .limiti, .azioni, .stampa-comandi, .crea,
   .prompt-testa button, .bandierina, .bottone-link, .esempi, .scheda-voce button, .aiuto { display: none !important; }
   .scheda-voce.attiva { box-shadow: none; }
   body.stampa-risultato main > section { display: none !important; }

@@ -76,6 +76,21 @@ test('i link interni della guida e della pagina principale arrivano a file che e
   assert.ok(og && fs.existsSync(path.join(radice, og[1])), 'immagine di anteprima mancante');
 });
 
+test('manifest e service worker: icone che esistono, file in cache che esistono e coprono tutti gli script', () => {
+  const m = JSON.parse(leggi('manifest.webmanifest'));
+  assert.ok(m.name && m.start_url && m.icons.length >= 2);
+  m.icons.forEach(i => assert.ok(fs.existsSync(path.join(radice, i.src)), 'icona mancante ' + i.src));
+  assert.match(leggi('index.html'), /rel="manifest" href="manifest\.webmanifest"/);
+  assert.match(leggi('index.html').match(/Content-Security-Policy" content="([^"]+)"/)[1], /manifest-src 'self'.*worker-src 'self'/);
+  const sw = leggi('sw.js');
+  const elenco = [...sw.match(/const FILE = \[([\s\S]*?)\];/)[1].matchAll(/'([^']+)'/g)].map(x => x[1]).filter(f => f !== './');
+  elenco.forEach(f => assert.ok(fs.existsSync(path.join(radice, f)), 'sw.js mette in cache un file che non esiste: ' + f));
+  const script = [...leggi('index.html').matchAll(/<script src="([^"]+)"/g)].map(x => x[1]);
+  script.forEach(s => assert.ok(elenco.includes(s), 'sw.js non mette in cache ' + s));
+  ['index.html', 'guida.html', 'style.css'].forEach(f => assert.ok(elenco.includes(f), f));
+  assert.ok(!/fetch\(['"]https?:/.test(sw), 'il service worker non deve contattare altri indirizzi');
+});
+
 test('il testo della pagina non contiene refusi tipici: segnaposto, TODO, doppi spazi nei titoli', () => {
   pagine.forEach(f => {
     const html = leggi(f);

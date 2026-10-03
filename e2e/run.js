@@ -76,6 +76,18 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     verifica(/«50\.000»/.test(await s.js('document.querySelector(".voce-fonte")?.textContent || ""')), 'testo scritto a mano: propone 50.000');
     verifica(/2\s*verificati\s*0\s*da controllare\s*1\s*non trovati/.test(riga(await s.js('document.getElementById("riepilogo").innerText'))), 'data e orario (9.30 contro 9:30) verificati, solo il budget non torna');
 
+    console.log('# Senza rete');
+    verifica(await s.js('navigator.serviceWorker.ready.then(function (r) { return !!r.active; })'), 'il service worker si attiva dopo la prima visita');
+    await s.js('caches.keys().then(function (k) { return k.length; })');
+    verifica((await s.js('caches.keys().then(function (k) { return caches.open(k[0]).then(function (c) { return c.keys(); }).then(function (r) { return r.length; }); })')) >= 12, 'i file del sito sono in cache');
+    await s.send('Network.enable');
+    await s.send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    await s.vai(URL); await sleep(300);
+    verifica((await s.js('document.title')) === 'Controllo Fonti' && !(await s.js('document.getElementById("risultato").hidden')), 'senza rete la pagina si apre e funziona (esempio verificato)');
+    verifica((await s.js('document.querySelectorAll("#scelta-esercizio option").length')) === 8, 'senza rete anche gli esercizi funzionano');
+    await s.send('Network.emulateNetworkConditions', { offline: false, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
+    await s.vai(URL);
+
     console.log('# Prompt e lingua');
     await s.send('Browser.grantPermissions', { permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'], origin: new globalThis.URL(base).origin }).catch(() => {});
     await s.js('document.getElementById("btn-pulisci").click(); document.getElementById("prepara").open = true; document.getElementById("copia-prompt").click()');
@@ -152,6 +164,16 @@ const CONTROLLO_ACCESSIBILITA = `(function(){
     verifica(await s.js('document.querySelector("#evidenziato mark.attivo") != null'), 'tastiera: Invio su un\'evidenziazione la attiva');
     await s.js('document.getElementById("t-strumento").focus(); document.getElementById("t-strumento").dispatchEvent(new KeyboardEvent("keydown", {key:"ArrowRight", bubbles:true}))');
     verifica((await s.js('document.activeElement.id')) === 't-esercizio', 'tastiera: freccia destra passa alla scheda successiva');
+
+    console.log('# Testo grande per il proiettore');
+    await s.js('document.getElementById("zoom-piu").click(); document.getElementById("zoom-piu").click(); document.getElementById("zoom-piu").click()');
+    verifica((await s.js('getComputedStyle(document.documentElement).fontSize')) === '24px' && await s.js('document.getElementById("zoom-piu").disabled'), 'tre clic su A+: testo al 150% (24 px), pulsante disattivato al massimo');
+    for (const scheda of ['strumento', 'esercizio']) {
+      await s.js('document.getElementById("t-' + scheda + '").click()'); await sleep(150);
+      verifica(!(await s.js('document.documentElement.scrollWidth > window.innerWidth')), 'testo al 150%: scheda «' + scheda + '» senza scorrimento orizzontale a 1280 px');
+    }
+    await s.js('for (var i = 0; i < 3; i++) document.getElementById("zoom-meno").click()');
+    verifica((await s.js('getComputedStyle(document.documentElement).fontSize')) === '16px', 'A- riporta il testo alla dimensione normale');
 
     console.log('# Tema scuro e telefono');
     await s.tema('dark'); await s.js('document.getElementById("t-strumento").click()'); await sleep(200);

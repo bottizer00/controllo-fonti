@@ -74,11 +74,12 @@ Come leggerli, onestamente:
 
 ## Privacy
 
-La pagina non contatta nessun server. Lo impone la politica di sicurezza dichiarata nella pagina (`connect-src 'none'`, nessuno script o stile inline), verificabile dagli strumenti per sviluppatori del browser, e un test controlla che resti così. Non usa cookie né salva nulla. Il link di un esercizio condiviso contiene i testi nella parte dopo il `#`, che il browser non invia a nessuno; viene validato prima dell'uso e il titolo è mostrato come testo, mai come HTML.
+La pagina non contatta nessun server. Lo impone la politica di sicurezza dichiarata nella pagina (`connect-src 'none'`, nessuno script o stile inline), verificabile dagli strumenti per sviluppatori del browser, e un test controlla che resti così. Non usa cookie e non salva i testi che inserisci. Un piccolo service worker (`sw.js`) tiene in cache i soli file del sito, con la rete per prima e la copia solo se la rete manca: dopo la prima visita la pagina funziona **anche senza connessione** (utile in aula) e si può installare come app; non contatta nessun altro indirizzo. Il link di un esercizio condiviso contiene i testi nella parte dopo il `#`, che il browser non invia a nessuno; viene validato prima dell'uso e il titolo è mostrato come testo, mai come HTML.
 
 ## Uso
 
 - **Online**: apri la demo.
+- **Senza rete**: dopo la prima visita funziona offline (anche installata come app). I pulsanti **A− / A+** in alto ingrandiscono il testo per il proiettore.
 - **In locale**: scarica il repository e apri `index.html` con il browser, funziona anche offline.
 - **Test** (serve Node 20 o successivo, nessuna dipendenza da installare):
 
@@ -99,6 +100,7 @@ src/check.js             logica di verifica, pura e testabile
 src/esercizio.js         frasi, errori e valutazione dell'esercizio
 src/condividi.js         esercizi condivisibili con un link
 src/file.js              lettura di .txt e .docx
+sw.js, manifest.webmanifest   funzionamento senza rete e installazione come app
 src/examples.js          gli otto esercizi (dati sintetici)
 src/ui-*.js              interfaccia
 benchmark/               corpus, etichette, misura

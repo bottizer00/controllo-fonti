@@ -93,4 +93,20 @@
 
   UI.avvia = function () { return instrada(); };
   window.addEventListener('hashchange', instrada);
+
+  /* Dimensione del testo per il proiettore: solo per questa visita, non viene salvata da nessuna parte. */
+  var LIVELLI_TESTO = [100, 115, 130, 150], livelloTesto = 0;
+  function applicaTesto() {
+    document.documentElement.style.fontSize = LIVELLI_TESTO[livelloTesto] + '%';
+    $('zoom-meno').disabled = livelloTesto === 0;
+    $('zoom-piu').disabled = livelloTesto === LIVELLI_TESTO.length - 1;
+  }
+  $('zoom-meno').addEventListener('click', function () { if (livelloTesto > 0) { livelloTesto--; applicaTesto(); } });
+  $('zoom-piu').addEventListener('click', function () { if (livelloTesto < LIVELLI_TESTO.length - 1) { livelloTesto++; applicaTesto(); } });
+  applicaTesto();
+
+  /* Dopo la prima visita la pagina funziona anche senza rete (sw.js): utile in aula. Si registra solo su http(s). */
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* senza: si usa solo online */ }); });
+  }
 })();

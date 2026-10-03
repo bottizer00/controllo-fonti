@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Controllo Fonti</title>
   <meta name="description" content="Confronta un testo scritto da un'AI con il documento originale: mostra numeri, date, nomi e citazioni che non tornano e dove cercarli nella fonte. Tutto nel browser, con esercizi per la formazione.">
   <meta name="theme-color" content="#12263f">
@@ -17,6 +17,8 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2312263f'/%3E%3Cpath d='M18 33l9 9 19-21' fill='none' stroke='%238fe0df' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="docs/icon-192.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,11 +28,18 @@
   <div class="contenitore">
     <h1>Controllo Fonti</h1>
     <p class="sottotitolo">L'AI scrive in modo convincente anche quando sbaglia i dettagli. Metti il suo testo accanto al documento originale: ti mostro i numeri, le date, i nomi e le citazioni che non tornano, e dove cercarli nella fonte.</p>
+    <div class="garanzie-riga">
     <ul class="garanzie">
       <li><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3H9z"/></svg>I testi restano nel tuo browser</li>
       <li><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm-1 13-4-4 1.4-1.4L11 13.2l4.6-4.6L17 10z"/></svg>Nessun account, nessun server</li>
       <li><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6z"/></svg>Codice aperto, licenza MIT</li>
     </ul>
+    <div class="zoom" role="group" aria-label="Dimensione del testo, per il proiettore">
+      <span aria-hidden="true">Testo</span>
+      <button type="button" id="zoom-meno" aria-label="Riduci il testo">A−</button>
+      <button type="button" id="zoom-piu" aria-label="Ingrandisci il testo">A+</button>
+    </div>
+    </div>
   </div>
 </header>
 
@@ -271,7 +280,7 @@
     </ul>
 
     <h2>Privacy</h2>
-    <p>La pagina non contatta nessun server: i testi non lasciano il tuo browser. Lo impone la politica di sicurezza della pagina (<code>connect-src 'none'</code>), che puoi verificare dagli strumenti per sviluppatori. Non usa cookie né salva nulla. Il link di un esercizio condiviso contiene i testi nella parte dopo il «#», che il browser non invia a nessuno.</p>
+    <p>La pagina non contatta nessun server: i testi non lasciano il tuo browser. Lo impone la politica di sicurezza della pagina (<code>connect-src 'none'</code>), che puoi verificare dagli strumenti per sviluppatori. Non usa cookie. Dopo la prima visita il browser tiene una copia dei file del sito (non dei tuoi testi, che non vengono salvati da nessuna parte): per questo la pagina si apre e funziona anche senza rete, utile in aula, e si può installare come app. Il link di un esercizio condiviso contiene i testi nella parte dopo il «#», che il browser non invia a nessuno.</p>
 
     <p class="piede">Strumento didattico, licenza MIT · di Giacomo Bottizer · <a href="https://github.com/bottizer00/controllo-fonti">codice su GitHub</a></p>
   </section>

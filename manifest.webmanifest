@@ -1,0 +1,15 @@
+{
+  "name": "Controllo Fonti",
+  "short_name": "Controllo Fonti",
+  "description": "Confronta un testo scritto da un'AI con il documento originale: mostra cosa non torna e dove cercarlo nella fonte. Tutto nel browser.",
+  "lang": "it",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12263f",
+  "theme_color": "#12263f",
+  "icons": [
+    { "src": "docs/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "docs/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
