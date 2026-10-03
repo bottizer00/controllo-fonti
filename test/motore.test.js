@@ -87,6 +87,17 @@ test('citazioni: identica, riscritta, inventata', () => {
   assert.equal(CF.verifica(fonte, 'Ha detto "si" e "no".').items.filter(i => i.tipo === 'citazione').length, 0);   // virgolette brevi: non sono citazioni
 });
 
+test('una citazione inventata mostra il passaggio piu\' simile della fonte, fino alla fine della frase', () => {
+  const contratto = EX.find(e => e.id === 'contratto');
+  const c = CF.verifica(contratto.fonte, contratto.ai).items.find(i => i.tipo === 'citazione');
+  assert.equal(c.stato, 'miss');
+  assert.match(c.suggerimento.testo, /^Ciascuna parte può recedere con un preavviso scritto di 60 giorni$/);
+  assert.equal(contratto.fonte.slice(c.suggerimento.inizio, c.suggerimento.fine), c.suggerimento.testo);
+  const f = 'Il direttore ha dichiarato: "Non aumenteremo i prezzi fino alla fine dell\'anno" durante la conferenza.';
+  const lontana = CF.verifica(f, 'Ha detto: «Contiamo di ridurre i listini entro l\'estate prossima».').items[0];
+  assert.equal(lontana.suggerimento, null);                       // nessun passaggio simile: niente suggerimento
+});
+
 test('telefoni: stesso numero in formati diversi', () => {
   assert.equal(stato('Chiamare lo 0432 511934 in orario di ufficio.', 'Telefono: 0432-511934.', '0432-511934'), 'ok');
   assert.equal(stato('Cell. 351 595 3818.', 'Cellulare +39 351 5953818.', '+39 351 5953818'), 'ok');

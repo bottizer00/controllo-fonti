@@ -140,7 +140,10 @@
       '<span class="segno s-' + it.stato + '" aria-hidden="true">' + SEGNO[it.stato] + '</span>' +
       '<div class="voce-testo"><strong>' + esc(it.testo) + '</strong><span class="tipo">(' + esc(it.etichetta) + ')</span>' +
       '<span class="voce-motivo">' + esc(it.motivo) + '</span>';
-    if (it.suggerimento) h += '<span class="voce-fonte">Nella fonte, in un contesto simile: <strong>«' + esc(it.suggerimento.testo) + '»</strong></span>';
+    if (it.suggerimento) {
+      h += '<span class="voce-fonte">' + (it.tipo === 'citazione' ? 'Il passaggio più simile nella fonte: ' : 'Nella fonte, in un contesto simile: ') +
+        '<strong>«' + esc(it.suggerimento.testo) + '»</strong></span>';
+    }
     h += '<span class="voce-contesto">' + esc(c.prima) + ' <mark class="s-' + it.stato + '">' + esc(c.testo) + '</mark> ' + esc(c.dopo) + '</span></div>' +
       '<button type="button" class="secondario piccolo" data-vedi="' + i + '">Vedi nella fonte</button></div>';
     return h;

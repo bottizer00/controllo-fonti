@@ -965,6 +965,28 @@
     return span(idx.nomi.filter(function (s) { return s.parole.indexOf(trovato) !== -1; })[0]);
   }
 
+  // Il passaggio della fonte piu' simile a una citazione: una finestra scorrevole di parole, quella che ne contiene di piu' in comune.
+  function passaggioSimile(idx, parole) {
+    var L = parole.length, voluto = new Map(), conta = new Map(), toks = idx.tokens, W = Math.round(L * 1.35) + 2;
+    parole.forEach(function (w) { voluto.set(w, (voluto.get(w) || 0) + 1); });
+    var presi = 0, migliore = 0, da = 0, a = 0;
+    for (var i = 0; i < toks.length; i++) {
+      var t = toks[i].t, q = voluto.get(t);
+      if (q) { var c = conta.get(t) || 0; if (c < q) presi++; conta.set(t, c + 1); }
+      if (i >= W) {
+        var u = toks[i - W].t, qu = voluto.get(u);
+        if (qu) { var cu = conta.get(u); conta.set(u, cu - 1); if (cu <= qu) presi--; }
+      }
+      if (presi > migliore) { migliore = presi; da = Math.max(0, i - W + 1); a = i; }
+    }
+    if (migliore / L < 0.45) return null;
+    while (da < a && !voluto.has(toks[da].t)) da++;                  // la finestra comincia e finisce su una parola della citazione
+    while (a > da && !voluto.has(toks[a].t)) a--;
+    var fine = toks[a].e;
+    fine += /^[^.\n;]{0,120}/.exec(idx.testo.slice(fine))[0].replace(/\s+$/, '').length;          // fino alla fine della frase: il dato che manca e' spesso li'
+    return { inizio: toks[da].i, fine: fine, testo: idx.testo.slice(toks[da].i, fine) };
+  }
+
   function controllaCitazione(x, idx) {
     var pos = trovaFrase(idx, x.parole);
     if (pos) return { stato: 'ok', motivo: 'La citazione compare nella fonte, parola per parola.', fonte: spanFrase(idx, pos) };
@@ -979,9 +1001,11 @@
       if (idx.trigrammi.has(x.parole[j] + ' ' + x.parole[j + 1] + ' ' + x.parole[j + 2])) comuni++;
     }
     if (tot && comuni / tot >= 0.6) {
-      return { stato: 'warn', motivo: 'La citazione e\' quasi uguale alla fonte ma non identica: potrebbe essere stata riscritta.' };
+      return { stato: 'warn', motivo: 'La citazione e\' quasi uguale alla fonte ma non identica: potrebbe essere stata riscritta.',
+        fonte: passaggioSimile(idx, x.parole) };
     }
-    return { stato: 'miss', motivo: 'Questa citazione non compare nella fonte: potrebbe essere inventata o parafrasata.' };
+    return { stato: 'miss', motivo: 'Questa citazione non compare nella fonte: potrebbe essere inventata o parafrasata.',
+      suggerimento: passaggioSimile(idx, x.parole) };
   }
 
   function etichetta(tipo) {
