@@ -676,6 +676,17 @@
       } else if (x.tipo === 'data') {
         x.fam = 'data'; x.chiave = x.d + '/' + x.m + '/' + x.y;
         idx.date.push(x); registra(x);
+        [x.y, x.d].forEach(function (parte, k) {                  // "dal 2025" trova "ottobre 2025", "il 14" trova "14 marzo"
+          var t = parte === null ? null : String(parte), pos = -1;
+          if (t === null) return;
+          pos = k === 0 ? x.testo.lastIndexOf(t) : x.testo.indexOf(t);
+          if (pos < 0 || (k === 0 && x.testo.slice(pos).length !== t.length)) return;
+          var voceParte = { fam: 'num', valori: [parte], primario: parte, scala: 1, decimali: 0, ctx: x.ctx, testo: t,
+            inizio: x.inizio + pos, fine: x.inizio + pos + t.length, chiave: chiaveNum(parte), daData: true };
+          var kk = chiaveNum(parte);
+          if (!idx.perValore.has(kk)) idx.perValore.set(kk, []);
+          idx.perValore.get(kk).push(voceParte);
+        });
       } else if (x.tipo === 'orario') {
         x.fam = 'orario'; x.chiave = String(x.minuti);
         if (!idx.orari.has(x.minuti)) idx.orari.set(x.minuti, x);
