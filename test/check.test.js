@@ -190,3 +190,9 @@ test("i nomi con connettore restano interi: Corte di Cassazione", () => {
   assert.equal(r.items[0].testo, 'Corte di Cassazione');
   assert.equal(r.items[0].stato, 'ok');
 });
+
+test("il motivo di un nome mancante mostra la parola come scritta dall'AI", () => {
+  const r = CF.verifica("Presenti: Elisa Toffolo.", "Ha parlato Elisa Tonon.");
+  assert.equal(r.items[0].stato, 'miss');
+  assert.match(r.items[0].motivo, /«Tonon»/);
+});

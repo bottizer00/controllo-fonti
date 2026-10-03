@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Controllo Fonti</title>
+  <meta name="description" content="Controlla un testo scritto da un'AI contro il documento originale: segnala numeri, date e nomi che nella fonte non ci sono. Tutto nel browser.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="testata">
+  <div class="contenitore">
+    <h1>Controllo Fonti</h1>
+    <p class="sottotitolo">Un primo filtro contro gli errori dell'AI: confronta un testo con il documento originale e segnala i numeri, le date e i nomi che nella fonte non ci sono.</p>
+    <p class="privacy"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm-3 8V6a3 3 0 0 1 6 0v3H9z"/></svg>
+      I tuoi testi restano nel browser: nessun invio, nessun server, nessun account.</p>
+  </div>
+</header>
+
+<main class="contenitore">
+  <div class="schede" role="tablist" aria-label="Sezioni">
+    <button role="tab" id="t-strumento" aria-controls="p-strumento" aria-selected="true" class="scheda attiva">Strumento</button>
+    <button role="tab" id="t-esercizio" aria-controls="p-esercizio" aria-selected="false" class="scheda">Esercizio: trova l'errore</button>
+    <button role="tab" id="t-come" aria-controls="p-come" aria-selected="false" class="scheda">Come funziona</button>
+  </div>
+
+  <!-- STRUMENTO -->
+  <section id="p-strumento" role="tabpanel" aria-labelledby="t-strumento">
+    <div class="barra">
+      <label for="scelta-esempio">Parti da un esempio</label>
+      <select id="scelta-esempio"></select>
+      <span class="spazio"></span>
+      <button type="button" id="btn-pulisci" class="secondario">Svuota</button>
+      <button type="button" id="btn-verifica" class="primario">Verifica</button>
+    </div>
+
+    <div class="colonne">
+      <div class="campo">
+        <label for="fonte">1. Documento originale (la fonte)</label>
+        <textarea id="fonte" rows="12" spellcheck="false" placeholder="Incolla qui il testo originale…"></textarea>
+      </div>
+      <div class="campo">
+        <label for="ai">2. Testo scritto dall'AI</label>
+        <textarea id="ai" rows="12" spellcheck="false" placeholder="Incolla qui il riassunto o la risposta dell'AI…"></textarea>
+      </div>
+    </div>
+
+    <div id="risultato" class="risultato" hidden aria-live="polite">
+      <h2>Risultato</h2>
+      <ul class="riepilogo" id="riepilogo"></ul>
+      <p class="legenda"><span class="chip s-ok">Verificato</span> compare nella fonte, nel contesto giusto
+        <span class="chip s-warn">Da controllare</span> numero in un altro contesto, arrotondato, parole separate
+        <span class="chip s-miss">Non trovato</span> nella fonte non c'è</p>
+      <div id="evidenziato" class="evidenziato"></div>
+      <div id="elenco"></div>
+      <div class="azioni">
+        <button type="button" id="btn-copia" class="secondario">Copia rapporto</button>
+        <span id="esito-copia" class="esito" role="status"></span>
+      </div>
+    </div>
+    <p class="limiti"><strong>Limite importante:</strong> lo strumento controlla solo la coerenza di numeri, date e nomi con la fonte. Non capisce il significato: un testo può essere sbagliato anche con tutti i numeri giusti. Serve come primo filtro, non come garanzia.</p>
+  </section>
+
+  <!-- ESERCIZIO -->
+  <section id="p-esercizio" role="tabpanel" aria-labelledby="t-esercizio" hidden>
+    <p>Un'AI ha riassunto un documento e nel riassunto ci sono errori. <strong>Clicca i numeri, le date e i nomi che secondo te non tornano con la fonte</strong>, poi premi «Rivela». Tutti gli esempi sono inventati.</p>
+    <div class="barra">
+      <label for="scelta-esercizio">Esempio</label>
+      <select id="scelta-esercizio"></select>
+      <span class="spazio"></span>
+      <button type="button" id="btn-riprova" class="secondario">Ricomincia</button>
+      <button type="button" id="btn-rivela" class="primario">Rivela</button>
+    </div>
+    <p id="descrizione-esercizio" class="descrizione"></p>
+    <div class="campo">
+      <h2 class="etichetta">Fonte originale</h2>
+      <div id="fonte-esercizio" class="sorgente"></div>
+    </div>
+    <div class="campo">
+      <h2 class="etichetta">Riassunto dell'AI <span class="aiuto">(clicca gli elementi sospetti)</span></h2>
+      <div id="ai-esercizio" class="evidenziato"></div>
+    </div>
+    <div id="esito-esercizio" class="risultato" hidden aria-live="polite"></div>
+  </section>
+
+  <!-- COME FUNZIONA -->
+  <section id="p-come" role="tabpanel" aria-labelledby="t-come" hidden>
+    <h2>Perché esiste</h2>
+    <p>Un'AI può scrivere un riassunto ricco di dettagli e sbagliare proprio i dettagli: punteggi, percentuali, date, cognomi. Più il testo sembra preciso, più è facile fidarsi. Questo strumento nasce da un caso vero: riassunti generati dall'AI di lezioni universitarie contenevano errori sostanziali, trovati solo confrontandoli riga per riga con le slide originali.</p>
+    <h2>Cosa controlla</h2>
+    <ul>
+      <li><strong>Numeri e percentuali</strong>, anche in formato italiano (1.300, 1,3, «1,3 milioni», «tre»), con il contesto in cui compaiono.</li>
+      <li><strong>Date</strong> in formati diversi (14/03/2026 e «14 marzo 2026» sono la stessa data).</li>
+      <li><strong>Riferimenti</strong> come «art. 4» o «sentenza n. 15/2026», <strong>nomi propri</strong>, sigle, codici, email e link.</li>
+    </ul>
+    <h2>Cosa non fa</h2>
+    <ul>
+      <li>Non capisce il significato: non può dire se una frase è vera, solo se i suoi numeri e nomi stanno nella fonte.</li>
+      <li>Non sostituisce la verifica di una persona competente, soprattutto per leggi, conformità e sicurezza.</li>
+      <li>Se la fonte è incompleta, segnala come «non trovato» anche cose vere: va letto come un invito a controllare.</li>
+    </ul>
+    <h2>Privacy</h2>
+    <p>La pagina non contatta nessun server: i testi non lasciano il tuo browser. Lo impone anche la politica di sicurezza della pagina (<code>connect-src 'none'</code>), che puoi verificare dagli strumenti per sviluppatori.</p>
+    <p class="piede">Strumento didattico, licenza MIT · di Giacomo Bottizer · <a href="https://github.com/bottizer00/controllo-fonti">codice su GitHub</a></p>
+  </section>
+</main>
+
+<script src="src/check.js"></script>
+<script src="src/examples.js"></script>
+<script src="src/ui.js"></script>
+</body>
+</html>

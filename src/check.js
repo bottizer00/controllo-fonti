@@ -245,13 +245,14 @@
       var k = m.index - 1;                                        // ultimo carattere "vero" prima del nome
       while (k >= 0 && /[\s"'«“(\[•*\-–—]/.test(spaziAcr.charAt(k))) k--;
       var iniziaFrase = k < 0 || /[.!?:;\n]/.test(spaziAcr.charAt(k)) || spaziAcr.slice(k + 1, m.index).indexOf('\n') !== -1;
-      var parole = m[0].split(/[ \t]+/).filter(function (p, n) {
+      var originali = m[0].split(/[ \t]+/).filter(function (p, n) {
         return n === 0 || !new RegExp('^' + FILTRO_CONNETTORI + '$', 'i').test(p);   // "Banca d'Italia", "Corte di Cassazione"
-      }).map(normalizza);
+      });
+      var parole = originali.map(normalizza);
       if (iniziaFrase && parole.length === 1) continue;           // "Il", "Secondo", "Inoltre"...
       if (parole.length === 1 && parole[0].length < 3) continue;
       out.push({ tipo: 'nome', testo: m[0], inizio: m.index, fine: m.index + m[0].length,
-        parole: parole, iniziaFrase: iniziaFrase, frase: normalizza(m[0]) });
+        parole: parole, originali: originali, iniziaFrase: iniziaFrase, frase: normalizza(m[0]) });
     }
     return out;
   }
@@ -381,8 +382,9 @@
     if (x.iniziaFrase && !presenti[0] && presenti.slice(1).every(Boolean)) {
       return { stato: 'ok', motivo: 'Compare nella fonte.', saltaPrimaParola: true };
     }
-    var mancanti = parole.filter(function (p, i) { return !presenti[i]; });
-    return { stato: 'miss', motivo: 'Nella fonte non compare: ' + mancanti.join(', ') + '.' };
+    var nomi = x.originali || parole;
+    var mancanti = nomi.filter(function (p, i) { return !presenti[i]; });
+    return { stato: 'miss', motivo: 'Nella fonte non compare: ' + mancanti.map(function (p) { return '«' + p + '»'; }).join(', ') + '.' };
   }
 
   function etichetta(tipo) {
