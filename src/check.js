@@ -320,7 +320,7 @@
       var mese = MESI.indexOf(m[2].toLowerCase()) + 1;
       out.push({ tipo: 'data', testo: testo.slice(m.index, fine), inizio: m.index, fine: fine, d: g, m: mese, y: anno });
       var da = m.index, prima;                                   // "22, 29 gennaio", "1° e 8 giugno", "dal 12 al 14 marzo"
-      while ((prima = /(?<![\d\/.\-])(\d{1,2})\s*[°º]?(?:\s*,\s*|\s+e\s+|\s+ed\s+|-|–|\s+al?\s+)$/.exec(mascherato.slice(Math.max(0, da - 14), da))) !== null) {
+      while ((prima = /(?<![\d\/.:\-])(\d{1,2})\s*[°º]?(?:\s*,\s*|\s+e\s+|\s+ed\s+|-|–|\s+al?\s+)$/.exec(mascherato.slice(Math.max(0, da - 14), da))) !== null) {
         var gg = +prima[1];
         if (gg < 1 || gg > 31) break;
         var ini = da - prima[0].length;
@@ -440,7 +440,7 @@
   // Numeri di telefono: 0432 511934, 02-5645789, 351 595 3818, +39 ...
   function estraiTelefoni(testo) {
     var out = [], m;
-    var re = /(?<![\d.,\/-])(?:\+39[ .-]?)?(?:0\d{1,3}[ .\/-]?\d{5,8}|3\d{2}[ .\/-]?\d{3}[ .\/-]?\d{3,4})(?![\d]|[.,]\d)/g;
+    var re = /(?<![\d.,\/-])(?:\+39[ .-]?)?(?:0\d{1,3}[ .\/-]?\d{5,8}|0\d{1,3}(?:[ .\/-]\d{2,4}){2,3}|3\d{2}[ .\/-]?\d{3}[ .\/-]?\d{3,4})(?![\d]|[.,]\d)/g;
     while ((m = re.exec(testo)) !== null) {
       var cifre = m[0].replace(/\D/g, '').replace(/^39(?=\d{9,10}$)/, '');
       if (cifre.length < 8 || cifre.length > 11) continue;
@@ -462,9 +462,9 @@
     return out;
   }
 
-  function estraiNumeri(testo) {
+  function estraiNumeri(testo, opzioni) {
     var out = [], m;
-    var re = /(?<![\p{L}\p{N}_])(\d{1,3}(?:[.  ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?![\p{L}\p{N}_])/giu;
+    var re = /(?<![\p{L}\p{N}_])(\d{1,3}(?:[.  ]\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?:\s*(%|per\s*cento|percento))?(?:\s*(mila|mille|milioni?|miliardi?|mln|mld)(?![\p{L}]))?(?:[ºª]|°(?![CFcf\p{L}]))?(?:(?:kwh|kw|kg|mg|mq|mc|mm|cm|km|ml|cl|dl|gb|mb|tb|hz|min|g|l|m|h|v|w|s)(?![\p{L}\p{N}_]))?(?![\p{L}\p{N}_]|[.,]\d)/giu;
     while ((m = re.exec(testo)) !== null) {
       var inizio = m.index, fine = m.index + m[0].length;
       var dopo = testo.charAt(fine);
@@ -479,13 +479,18 @@
       out.push({ tipo: tipo, testo: m[0], inizio: inizio, fine: fine, cands: p.cands, decimali: p.decimali,
         scala: scala });
     }
-    return out.concat(estraiNumeriInLettere(testo));
+    return out.concat(estraiNumeriInLettere(testo, opzioni));
   }
 
-  function estraiNumeriInLettere(testo) {
+  function estraiNumeriInLettere(testo, opzioni) {
     var out = [], m, parole = [];
     var reW = /(?<![\p{L}\d])\p{L}+(?![\p{L}\d])/gu;
     while ((m = reW.exec(testo)) !== null) parole.push({ i: m.index, e: m.index + m[0].length, n: normalizza(m[0]) });
+    for (var q = parole.length - 2; q >= 0; q--) {                    // "settanta-quattro"
+      if (DECINE[parole[q].n] && UNITA[parole[q + 1].n] && testo.slice(parole[q].e, parole[q + 1].i) === '-') {
+        parole.splice(q, 2, { i: parole[q].i, e: parole[q + 1].e, n: parole[q].n + parole[q + 1].n });
+      }
+    }
     function vicine(a, b) { return b < parole.length && /^[ \t]+$/.test(testo.slice(parole[a].e, parole[b].i)); }
     for (var n = 0; n < parole.length; n++) {
       var p = parole[n], lw = p.n, v, j = n, scala = 1, tipo = 'numero', decimali = 0;
@@ -499,6 +504,7 @@
         var comeNumero = false;
         if (lw === 'sei' || lw === 'uno') {
           if (vicine(n, n + 1) && parole[n + 1].n === 'virgola' && vicine(n + 1, n + 2) && valoreParola(parole[n + 2].n) !== null) comeNumero = true;   // "sei virgola otto"
+          else if (lw === 'sei' && opzioni && opzioni.seiNumero) comeNumero = true;       // nella fonte: meglio un numero in piu'
           else if (lw === 'sei' && n > 0 && vicine(n - 1, n) && PRIMA_DI_SEI.has(parole[n - 1].n) &&
             !(vicine(n, n + 1) && DOPO_SEI_VERBO.has(parole[n + 1].n))) comeNumero = true;
         }
@@ -592,7 +598,7 @@
   function estrai(testo, opzioni) {
     testo = String(testo || '');
     var tutti = [];
-    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti))); }
+    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti), opzioni)); }
     if (!(opzioni && opzioni.senzaCitazioni)) passo(estraiCitazioni);
     passo(estraiDate);
     passo(estraiOrari);
@@ -620,7 +626,7 @@
   function span(v) { return v ? { inizio: v.inizio, fine: v.fine, testo: v.testo } : null; }
 
   function indicizzaFonte(testo) {
-    var elementi = estrai(testo, { senzaCitazioni: true });
+    var elementi = estrai(testo, { senzaCitazioni: true, seiNumero: true });
     var tokens = tokenizza(testo);
     var norm = normalizza(testo);
     var idx = { testo: testo, norm: norm, allineato: norm.length === testo.length, tokens: tokens,
@@ -800,15 +806,14 @@
     return { stato: 'miss', motivo: 'Questo numero non compare nella fonte.', suggerimento: span(suggerisci(idx, fam, ctxAI, simile)) };
   }
 
-  function controllaOrario(x, idx, ctxAI) {
+  function controllaOrario(x, idx) {
     var o = idx.orari.get(x.minuti);
     if (o) return { stato: 'ok', motivo: 'Questo orario compare nella fonte.', fonte: span(o) };
     var h = Math.floor(x.minuti / 60), mi = x.minuti % 60, scritto = idx.perValore.get(chiaveNum(h + mi / 100));
     if (scritto && scritto.some(function (v) { return v.decimali === 2; })) {                      // "19:30" contro "19.30"
       return { stato: 'ok', motivo: 'Compare nella fonte (scritto come numero decimale).', fonte: span(scritto[0]) };
     }
-    var vicinoOrario = function (v) { return Math.abs(v.minuti - x.minuti) <= 240; };
-    return { stato: 'miss', motivo: 'Questo orario non compare nella fonte.', suggerimento: span(suggerisci(idx, 'orario', ctxAI, vicinoOrario)) };
+    return { stato: 'miss', motivo: 'Questo orario non compare nella fonte.' };       // nessun suggerimento: troppo spesso sbagliato
   }
 
   function controllaData(x, idx, ctxAI) {
@@ -981,7 +986,7 @@
       if (ANCORE[x.tipo]) ctxAI = stemsAttorno(tokensAI, x.inizio, x.fine, 2, 2);
       if (x.tipo === 'numero' || x.tipo === 'percentuale' || x.tipo === 'importo') r = controllaNumero(x, idx, ctxAI, tokensAI);
       else if (x.tipo === 'data') r = controllaData(x, idx, ctxAI);
-      else if (x.tipo === 'orario') r = controllaOrario(x, idx, ctxAI);
+      else if (x.tipo === 'orario') r = controllaOrario(x, idx);
       else if (x.tipo === 'riferimento') r = controllaRiferimento(x, idx);
       else if (x.tipo === 'citazione') r = controllaCitazione(x, idx);
       else if (x.tipo === 'email' || x.tipo === 'link') {
