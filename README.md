@@ -7,7 +7,7 @@
 **Prova la demo: [bottizer00.github.io/controllo-fonti](https://bottizer00.github.io/controllo-fonti/)**
 I testi restano nel tuo browser: nessun invio, nessun server, nessun account.
 
-![Controllo Fonti: il testo dell'AI accanto alla fonte, con l'errore evidenziato e la correzione proposta](docs/screenshot.png)
+![Dimostrazione: un errore evidenziato con la correzione proposta, una citazione inventata con il passaggio più simile della fonte, poi un esercizio con errori di significato](docs/demo.gif)
 
 ## Perché esiste
 
@@ -17,7 +17,7 @@ Lo strumento nasce da un caso vero: per preparare un esame avevo fatto riassumer
 
 ## Cosa fa
 
-- **Strumento.** Due caselle (fonte e testo AI, anche da file `.txt` o Word `.docx`). Il testo AI viene evidenziato in tre colori: *verificato*, *da controllare* (il valore c'è, ma altrove, arrotondato o con parole diverse intorno), *non trovato*. Cliccando un'evidenziazione il passaggio corrispondente si illumina nella fonte; se il valore manca ma la fonte ne riporta uno plausibile nello stesso contesto, lo propone («nella fonte c'è 8%»).
+- **Strumento.** Due caselle (fonte e testo AI, anche da file `.txt` o Word `.docx`). Il testo AI viene evidenziato in tre colori: *verificato*, *da controllare* (il valore c'è, ma altrove, arrotondato o con parole diverse intorno), *non trovato*. Cliccando un'evidenziazione il passaggio corrispondente si illumina nella fonte; se il valore manca ma la fonte ne riporta uno plausibile nello stesso contesto, lo propone («nella fonte c'è 8%»); per una citazione inventata mostra il passaggio della fonte che le somiglia di più.
 - **Esercizio «trova l'errore».** Otto esercizi su tre livelli (verbale, scheda prodotto, preventivo, circolare, test, curriculum, contratto, offerta di lavoro). Si segnano gli elementi sospetti e, con una bandierina, le *frasi* il cui significato è ribaltato. Alla fine ogni errore ha la sua spiegazione e dice se lo strumento lo vede. Quattro esercizi contengono errori di significato («gradita» che diventa «richiesta», «determinato» che diventa «indeterminato»): nessun numero è sbagliato e lo strumento li dà per verdi, per far toccare con mano il limite.
 - **Per i formatori.** Si crea un esercizio con i propri testi e lo si condivide con un link: contiene tutto, nessun server. Schede da stampare per i partecipanti (con o senza soluzioni), una pagina con [prompt da copiare, i sei tipi di errore e una lezione di 30 minuti](https://bottizer00.github.io/controllo-fonti/#formazione) e la [guida per il formatore](https://bottizer00.github.io/controllo-fonti/guida.html) con tempi, domande, risposte attese e una variante da 60 minuti.
 
