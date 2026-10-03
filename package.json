@@ -1,7 +1,7 @@
 {
   "name": "controllo-fonti",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Controlla un testo scritto da un'AI contro il documento originale: segnala numeri, date e nomi che nella fonte non ci sono.",
-  "scripts": { "test": "node --test", "benchmark": "node benchmark/run.js" },
+  "scripts": { "test": "node --test", "benchmark": "node benchmark/run.js", "e2e": "node e2e/run.js" },
   "license": "MIT"
 }

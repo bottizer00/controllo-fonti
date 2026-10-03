@@ -7,6 +7,7 @@ on:
 
 jobs:
   test:
+    name: Test e valutazione
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,3 +15,22 @@ jobs:
         with:
           node-version: 22
       - run: node --test
+      - name: Valutazione sul corpus (risultati nel log)
+        run: node benchmark/run.js
+
+  browser:
+    name: Prova nel browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prova end-to-end con Chrome
+        run: node e2e/run.js --screenshot schermate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schermate
+          path: schermate
+          if-no-files-found: ignore
