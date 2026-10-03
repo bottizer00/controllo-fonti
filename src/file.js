@@ -110,7 +110,7 @@
   function leggiFile(file) {
     var nome = file.name || '';
     if (file.size > MAX_FILE) return Promise.reject(new Error('Il file e\' troppo grande (massimo 15 MB).'));
-    if (/\.pdf$/i.test(nome)) return Promise.reject(new Error('I PDF non si leggono qui: apri il PDF, copia il testo e incollalo nella casella.'));
+    if (/\.pdf$/i.test(nome)) return Promise.reject(new Error('I PDF non si leggono qui: apri il PDF, copia il testo e incollalo nella casella, poi premi «Sistema da PDF».'));
     if (/\.(doc|rtf|odt|pages)$/i.test(nome)) return Promise.reject(new Error('Questo formato non e\' supportato: salva il documento come .docx o .txt, oppure incolla il testo.'));
     return file.arrayBuffer().then(function (buffer) {
       if (/\.docx$/i.test(nome)) return testoDaDocx(buffer);
