@@ -163,6 +163,47 @@
     return out;
   }
 
+  /* Orari: 9:30, 14.45 (con "ore", "alle"...), 9h30, "ore 9", intervalli 9.15-13.45. `largo` accetta anche "alle 9". */
+  var PRIMA_ORA = '(?:ore|alle|dalle|delle|(?:tra|dopo|prima|entro|verso|fino|da|a)\\s+le)';
+
+  function oraValida(h, m) { return h >= 0 && h <= 24 && m >= 0 && m <= 59 && !(h === 24 && m > 0); }
+
+  function estraiOrari(testo, largo) {
+    var out = [], m, re;
+    function aggiungi(inizio, lunghezza, h, mi) {
+      if (!oraValida(h, mi)) return;
+      for (var k = 0; k < out.length; k++) if (inizio < out[k].fine && inizio + lunghezza > out[k].inizio) return;
+      out.push({ tipo: 'orario', testo: testo.substr(inizio, lunghezza), inizio: inizio, fine: inizio + lunghezza,
+        minuti: h * 60 + mi });
+    }
+    re = /(?<![\d:.,\/])(\d{1,2}):(\d{2})(?![\d:])/g;
+    while ((m = re.exec(testo)) !== null) aggiungi(m.index, m[0].length, +m[1], +m[2]);
+    re = new RegExp('(?<![\\p{L}\\d])' + PRIMA_ORA + '(?:\\s+ore)?\\s+(\\d{1,2})\\s?[.hH]\\s?(\\d{2})(?![\\d])', 'giu');
+    while ((m = re.exec(testo)) !== null) {
+      var cifre = m[0].search(/\d{1,2}\s?[.hH]\s?\d{2}$/);
+      aggiungi(m.index + cifre, m[0].length - cifre, +m[1], +m[2]);
+    }
+    re = /(?<![\d.,:\/])(\d{1,2})\.(\d{2})\s*[-–]\s*(\d{1,2})\.(\d{2})(?![\d:]|[.,]\d)/g;           // 9.15-13.45
+    while ((m = re.exec(testo)) !== null) {
+      var lungSecondo = m[3].length + 1 + m[4].length;
+      aggiungi(m.index, m[1].length + 1 + m[2].length, +m[1], +m[2]);
+      aggiungi(m.index + m[0].length - lungSecondo, lungSecondo, +m[3], +m[4]);
+    }
+    re = new RegExp('(?<![\\p{L}\\d])(?:alle\\s+)?ore\\s+(\\d{1,2})(?![\\d:%]|[.,]\\d)', 'giu');          // "ore 9"
+    while ((m = re.exec(testo)) !== null) {
+      var c2 = m[0].search(/\d{1,2}$/);
+      aggiungi(m.index + c2, m[0].length - c2, +m[1], 0);
+    }
+    if (largo) {                                                                                     // "alle 9"
+      re = new RegExp('(?<![\\p{L}\\d])' + PRIMA_ORA + '\\s+(\\d{1,2})(?![\\d:%]|[.,]\\d)', 'giu');
+      while ((m = re.exec(testo)) !== null) {
+        var c3 = m[0].search(/\d{1,2}$/);
+        aggiungi(m.index + c3, m[0].length - c3, +m[1], 0);
+      }
+    }
+    return out;
+  }
+
   function chiaveRiferimento(prefisso, numero) {
     var p = normalizza(prefisso).replace(/[.\s]/g, '');
     if (/^art/.test(p)) p = 'art';
@@ -338,6 +379,7 @@
     testo = String(testo || '');
     var tutti = [];
     var date = estraiDate(testo);          tutti = tutti.concat(date);
+    var orari = estraiOrari(mascheraSpan(testo, tutti));           tutti = tutti.concat(orari);
     var rifs = estraiRiferimenti(mascheraSpan(testo, tutti));      tutti = tutti.concat(rifs);
     var contatti = estraiContatti(mascheraSpan(testo, tutti));     tutti = tutti.concat(contatti);
     var codici = estraiCodici(mascheraSpan(testo, tutti));         tutti = tutti.concat(codici);
@@ -357,7 +399,7 @@
   function indicizzaFonte(testo) {
     var elementi = estrai(testo);
     var tokens = tokenizza(testo);
-    var idx = { testo: testo, norm: normalizza(testo), numeri: [], date: [], rif: new Set(),
+    var idx = { testo: testo, norm: normalizza(testo), numeri: [], date: [], rif: new Set(), orari: new Map(),
       contatti: new Set(), perValore: new Map(), arrotInteri: null, cacheArrot: {}, cacheNomi: {} };
     idx.normCompatto = idx.norm.replace(/[^a-z0-9]+/g, '');
     elementi.forEach(function (x) {
@@ -373,9 +415,11 @@
           idx.perValore.get(k).push(voce);
         });
       } else if (x.tipo === 'data') idx.date.push(x);
+      else if (x.tipo === 'orario') idx.orari.set(x.minuti, x);
       else if (x.tipo === 'riferimento') idx.rif.add(x.chiave);
       else if (x.tipo === 'email' || x.tipo === 'link') idx.contatti.add(x.chiave);
     });
+    estraiOrari(testo, true).forEach(function (o) { if (!idx.orari.has(o.minuti)) idx.orari.set(o.minuti, o); });   // anche "alle 9"
     return idx;
   }
 
@@ -399,6 +443,10 @@
         return { stato: 'ok', motivo: 'Compare nella fonte, in un contesto coerente.' };
       }
       return { stato: 'warn', motivo: 'Il numero compare nella fonte, ma in un altro contesto: controlla a cosa si riferisce.' };
+    }
+    if (x.scala === 1 && x.cands.length === 1 && Number.isInteger(x.cands[0]) && idx.orari.has(x.cands[0] * 60)) {
+      var k = primoTokenDopo(tokensAI, x.inizio) - 1;       // "alle 9" puo' stare nella fonte come "9:00"
+      if (k >= 0 && /^(alle|dalle|delle|ore|le)$/.test(tokensAI[k].t)) return { stato: 'ok', motivo: 'Compare nella fonte come orario.' };
     }
     var mant = x.cands[0], vicino;
     if (x.decimali >= 1 || x.scala > 1) {                      // "1,3 milioni" contro 1.280.000
@@ -424,6 +472,11 @@
     }
     if (vicino) return { stato: 'warn', motivo: 'Valore arrotondato rispetto alla fonte (' + vicino.testo + ').' };
     return { stato: 'miss', motivo: 'Questo numero non compare nella fonte.' };
+  }
+
+  function controllaOrario(x, idx) {
+    return idx.orari.has(x.minuti) ? { stato: 'ok', motivo: 'Questo orario compare nella fonte.' }
+      : { stato: 'miss', motivo: 'Questo orario non compare nella fonte.' };
   }
 
   function controllaData(x, idx) {
@@ -464,7 +517,7 @@
   }
 
   function etichetta(tipo) {
-    return { numero: 'numero', percentuale: 'percentuale', importo: 'importo', data: 'data',
+    return { numero: 'numero', percentuale: 'percentuale', importo: 'importo', data: 'data', orario: 'orario',
       riferimento: 'riferimento', nome: 'nome', email: 'email', link: 'link' }[tipo] || tipo;
   }
 
@@ -477,6 +530,7 @@
       var r;
       if (x.tipo === 'numero' || x.tipo === 'percentuale' || x.tipo === 'importo') r = controllaNumero(x, idx, tokensAI);
       else if (x.tipo === 'data') r = controllaData(x, idx);
+      else if (x.tipo === 'orario') r = controllaOrario(x, idx);
       else if (x.tipo === 'riferimento') {
         r = idx.rif.has(x.chiave) ? { stato: 'ok', motivo: 'Questo riferimento compare nella fonte.' }
           : { stato: 'miss', motivo: 'Questo riferimento non compare nella fonte.' };
