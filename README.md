@@ -59,6 +59,8 @@ La cartella `benchmark/` contiene **24 documenti inventati** (verbali, circolari
 
 **Falsi allarmi** sui riassunti originali: 68 segnalazioni su 1.793 elementi (3,8%). Le ho riviste **tutte a mano**: 21 erano problemi veri (valori calcolati, dedotti o sbagliati dall'AI, come 8.350 m² invece di 8.750 o un orario di ritorno inventato) e 47 falsi allarmi (2,6% degli elementi), quasi sempre numeri presenti nella fonte con parole diverse intorno (una tabella riscritta, un sinonimo). Le etichette sono in `benchmark/etichette.json`.
 
+**Su testi veri** va un po' peggio. Ho provato lo strumento su sette sezioni di Wikipedia in italiano, riassunte da un'AI (in locale: non sono nel repository per la licenza dei testi). Si segnala circa il 9-10% degli elementi, contro il 3,8% del corpus sintetico: i testi reali hanno più sinonimi («persone» e «vittime»), migliaia scritte con lo spazio, valori calcolati dall'AI e frasi lunghe con molti numeri. Quella prova ha fatto scoprire tre difetti veri (le migliaia con lo spazio, il contesto che attraversava la fine della frase, i nomi dopo l'articolo), ora corretti. Due test ne tengono il frutto: un testo copiato dalla fonte non deve avere nessuna segnalazione, né intero né frase per frase, e 300 testi casuali non devono mai mandare in errore il motore.
+
 Come leggerli, onestamente:
 - il caso più difficile, un numero esatto messo nel posto sbagliato, è quello in cui lo strumento sbaglia di più (circa uno su quattro sfugge): dipende da quanto il contesto cambia;
 - i documenti sono sintetici e i riassunti vengono da un solo modello: i numeri valgono per questo corpus, non per ogni testo;
@@ -85,7 +87,7 @@ La pagina non contatta nessun server. Lo impone la politica di sicurezza dichiar
 - **Test** (serve Node 20 o successivo, nessuna dipendenza da installare):
 
 ```bash
-npm test            # 119 test: logica, esercizi, file Word, link, benchmark, pagine
+npm test            # circa 140 test: logica, esercizi, file Word, link, benchmark, pagine, coerenza, testi casuali
 npm run benchmark   # valutazione sul corpus
 npm run e2e         # prova nel browser reale (serve Chrome, Chromium o Edge)
 ```
