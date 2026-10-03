@@ -423,7 +423,7 @@
 
   function estraiContatti(testo) {
     var out = [], m;
-    var reMail = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;
+    var reMail = /(?<![\w.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g;       // il lookbehind evita di riprovare da ogni lettera di una parola lunghissima
     while ((m = reMail.exec(testo)) !== null) {
       out.push({ tipo: 'email', testo: m[0], inizio: m.index, fine: m.index + m[0].length,
         chiave: m[0].toLowerCase() });
@@ -598,7 +598,7 @@
   function estrai(testo, opzioni) {
     testo = String(testo || '');
     var tutti = [];
-    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti, FILL), opzioni)); }     // FILL: nessuna espressione lo attraversa
+    function passo(fn) { tutti = tutti.concat(fn(mascheraSpan(testo, tutti, FILL))); }     // FILL: nessuna espressione lo attraversa
     if (!(opzioni && opzioni.senzaCitazioni)) passo(estraiCitazioni);
     passo(estraiDate);
     passo(estraiOrari);
@@ -607,7 +607,7 @@
     passo(estraiDateBrevi);
     passo(estraiContatti);
     passo(estraiCodici);
-    passo(estraiNumeri);
+    passo(function (t) { return estraiNumeri(t, opzioni); });
     var nomi = estraiNomi(mascheraSpan(testo, tutti.filter(function (x) { return x.tipo !== 'nome'; }), FILL),
       spanEtichette(testo));
     tutti = tutti.concat(nomi);
@@ -770,15 +770,19 @@
       var a = Math.abs(valoriAI[0]), b = Math.abs(v.primario);
       return !a || !b || Math.max(a, b) / Math.min(a, b) <= 3;
     };
-    var trovati = [], visti = new Set();
-    valoriAI.forEach(function (a) {
-      (idx.perValore.get(chiaveNum(a)) || []).forEach(function (s) {
-        if (!visti.has(s)) { visti.add(s); trovati.push(s); }
-      });
-    });
-    if (trovati.length) {
-      var buona = !ctxAI.size ? trovati[0] : trovati.filter(function (s) { return !s.ctx.size || intersezione(ctxAI, s.ctx); })[0];
-      if (buona) return { stato: 'ok', motivo: 'Compare nella fonte, in un contesto coerente.', fonte: span(buona) };
+    var liste = valoriAI.map(function (a) { return idx.perValore.get(chiaveNum(a)) || []; });
+    var buona = null, primo = null;                                      // si ferma alla prima occorrenza con un contesto coerente
+    for (var li = 0; !buona && li < liste.length; li++) {
+      for (var q = 0; q < liste[li].length; q++) {
+        var cand = liste[li][q];
+        if (!primo) primo = cand;
+        if (!ctxAI.size || !cand.ctx.size || intersezione(ctxAI, cand.ctx)) { buona = cand; break; }
+      }
+    }
+    if (buona) return { stato: 'ok', motivo: 'Compare nella fonte, in un contesto coerente.', fonte: span(buona) };
+    if (primo) {
+      var trovati = [], visti = new Set();
+      liste.forEach(function (l) { l.forEach(function (s) { if (!visti.has(s)) { visti.add(s); trovati.push(s); } }); });
       var sug = suggerisci(idx, fam, ctxAI, function (v) { return !visti.has(v) && simile(v); }, null, 2);   // il numero c'e' gia' altrove: servono prove forti
       return { stato: 'warn', motivo: 'Il numero compare nella fonte, ma in un altro contesto: controlla a cosa si riferisce.',
         fonte: span(trovati[0]), suggerimento: span(sug) };

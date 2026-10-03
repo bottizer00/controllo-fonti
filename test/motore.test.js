@@ -98,6 +98,11 @@ test('una citazione inventata mostra il passaggio piu\' simile della fonte, fino
   assert.equal(lontana.suggerimento, null);                       // nessun passaggio simile: niente suggerimento
 });
 
+test('"alle 3 sedi" nella fonte resta un numero (non un orario) e si confronta con "3 sedi"', () => {
+  assert.equal(stato('Gli uffici sono assegnati alle 3 sedi di Udine.', 'Ci sono 3 sedi a Udine.', '3'), 'ok');
+  assert.deepEqual(CF.estrai('Assegnati alle 3 sedi.', { senzaCitazioni: true, seiNumero: true }).map(x => x.tipo), ['numero']);
+});
+
 test('telefoni: stesso numero in formati diversi', () => {
   assert.equal(stato('Chiamare lo 0432 511934 in orario di ufficio.', 'Telefono: 0432-511934.', '0432-511934'), 'ok');
   assert.equal(stato('Cell. 351 595 3818.', 'Cellulare +39 351 5953818.', '+39 351 5953818'), 'ok');
